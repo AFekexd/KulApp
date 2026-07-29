@@ -1,20 +1,40 @@
 /**
- * PoopTracker Theme Typography
- * Native iOS 18 typography (SF Pro / System Default)
+ * KulApp Theme Typography
+ * Nunito for headers (chunky, friendly, rounded) + Inter for body text.
  */
 import { Platform } from 'react-native';
 import { Colors } from './colors';
 
-const systemFont = Platform.select({
-  ios: 'System',
-  android: 'sans-serif',
-  web: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-  default: 'System',
+// Nunito headings — loaded via expo-google-fonts in the app root
+// Inter body — loaded via expo-google-fonts in the app root
+// Falls back gracefully to system font if not loaded yet.
+
+const headingFont = Platform.select({
+  ios: 'Nunito-ExtraBold',
+  android: 'Nunito-ExtraBold',
+  web: '"Nunito", "Poppins", -apple-system, sans-serif',
+  default: 'Nunito-ExtraBold',
+})!;
+
+const bodyFont = Platform.select({
+  ios: 'Inter-Regular',
+  android: 'Inter-Regular',
+  web: '"Inter", "Roboto", -apple-system, sans-serif',
+  default: 'Inter-Regular',
+})!;
+
+const bodyBoldFont = Platform.select({
+  ios: 'Inter-SemiBold',
+  android: 'Inter-SemiBold',
+  web: '"Inter", "Roboto", -apple-system, sans-serif',
+  default: 'Inter-SemiBold',
 })!;
 
 export const fontFamily = {
-  heading: systemFont,
-  body: systemFont,
+  heading: headingFont,
+  headingBold: headingFont,
+  body: bodyFont,
+  bodyBold: bodyBoldFont,
   mono: 'monospace',
 };
 
@@ -47,31 +67,31 @@ export const typography = {
   heading1: {
     fontFamily: fontFamily.heading,
     fontSize: fontSize.xxxl,
-    fontWeight: fontWeight.bold,
+    fontWeight: fontWeight.black,
     lineHeight: lineHeight.heading(fontSize.xxxl),
     color: Colors.light.text,
-    letterSpacing: 0.5,
+    letterSpacing: -0.5,
   },
   heading2: {
     fontFamily: fontFamily.heading,
     fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
+    fontWeight: fontWeight.black,
     lineHeight: lineHeight.heading(fontSize.xxl),
     color: Colors.light.text,
-    letterSpacing: 0.5,
+    letterSpacing: -0.4,
   },
   heading3: {
     fontFamily: fontFamily.heading,
     fontSize: fontSize.xl,
-    fontWeight: fontWeight.semibold,
+    fontWeight: fontWeight.bold,
     lineHeight: lineHeight.heading(fontSize.xl),
     color: Colors.light.text,
-    letterSpacing: 0.5,
+    letterSpacing: -0.3,
   },
   heading4: {
     fontFamily: fontFamily.heading,
     fontSize: fontSize.lg,
-    fontWeight: fontWeight.semibold,
+    fontWeight: fontWeight.bold,
     lineHeight: lineHeight.heading(fontSize.lg),
     color: Colors.light.text,
   },
@@ -104,14 +124,14 @@ export const typography = {
     color: Colors.light.textSecondary,
   },
   label: {
-    fontFamily: fontFamily.body,
+    fontFamily: fontFamily.bodyBold,
     fontSize: fontSize.sm,
     fontWeight: fontWeight.semibold,
     lineHeight: lineHeight.body(fontSize.sm),
     color: Colors.light.text,
   },
   button: {
-    fontFamily: fontFamily.body,
+    fontFamily: fontFamily.bodyBold,
     fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
     lineHeight: lineHeight.body(fontSize.base),

@@ -36,6 +36,9 @@ export const colors = {
   ...Colors.light,
   ...Colors.accent,
   ...Colors.semantic,
+  // Convenience shorthands
+  bg: Colors.light.background,
+  card: Colors.light.surface,
 } as const;
 
 export { typography as Typography };

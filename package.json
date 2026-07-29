@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
+    "@expo-google-fonts/nunito": "^0.4.2",
     "@expo-google-fonts/outfit": "^0.4.3",
     "@expo/ui": "~57.0.7",
     "@expo/vector-icons": "^15.1.1",
