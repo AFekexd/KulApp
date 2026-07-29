@@ -1,33 +1,51 @@
 /**
- * PoopTracker Theme Colors
- * Native iOS 18 inspired - Minimal, clean, playful, light mode.
+ * KulApp Theme Colors
+ * Warm, bespoke, consumer-grade brand palette.
+ * Primary: Rich warm brown. Accent: Vibrant orange. Background: Soft cream.
  */
 
 const baseColors = {
-  background: '#F7F7F5',
-  card: '#FFFFFF',
-  primary: '#7C4D2E', // Brown
-  secondary: '#C89A5A', // Gold/Tan
-  success: '#4CAF50',
-  error: '#FF3B30',
-  warning: '#FF9500',
-  info: '#007AFF',
-  
-  textPrimary: '#1B1B1B',
-  textSecondary: '#6B6B6B',
-  textMuted: '#999999',
-  
-  border: '#ECECEC',
-  borderLight: '#F2F2F2',
+  // Core brand
+  background: '#2D1B15',       // Deep espresso — main screen bg
+  card: '#3E2723',             // Dark brown cards
+  cardWarm: '#4E342E',         // Lighter dark brown for alt surfaces
+
+  // Brand primaries
+  primary: '#8D6E63',          // Light mud — buttons & highlights
+  primaryLight: '#A1887F',     // Lighter mud for hover states
+  primarySurface: '#5D4037',   // Deep brown tint for bg highlights
+
+  // Accent
+  accent: '#A95C33',           // Dark bronze/rust — CTAs, highlights
+  accentLight: '#C36E40',      // Lighter bronze for gradients
+  accentSurface: '#4E342E',    // Dark orange-brown surface
+
+  // Secondary
+  secondary: '#8D6E63',        // Taupe/mud — secondary elements
+
+  // Semantic
+  success: '#33691E',          // Dark swamp green
+  error: '#BF360C',            // Deep rust red
+  warning: '#F57F17',          // Muddy mustard
+  info: '#3E2723',
+
+  // Text
+  textPrimary: '#EFEBE9',      // Off-white/light mud — primary text
+  textSecondary: '#BCAAA4',    // Muted mud — secondary text
+  textMuted: '#8D6E63',        // Darker mud — captions
+
+  // Borders
+  border: '#5D4037',           // Dark brown border
+  borderLight: '#4E342E',      // Lighter dark brown border
 };
 
-// Size/Severity Badges
+// Size/Severity Badges — kept readable with warm palette
 const badgeColors = {
-  tiny: { bg: '#E5F1FF', text: '#0066CC' }, // Blue
-  small: { bg: '#E6F4EA', text: '#137333' }, // Green
-  medium: { bg: '#FFF8E1', text: '#F9A825' }, // Yellow/Orange
-  large: { bg: '#FCE8E6', text: '#C5221F' }, // Red
-  massive: { bg: '#F3E8FD', text: '#7B1FA2' }, // Purple
+  tiny:    { bg: '#E5F1FF', text: '#1A5FA8' },
+  small:   { bg: '#E4F4EA', text: '#1A7A3B' },
+  medium:  { bg: '#FFF3E0', text: '#B85C00' },
+  large:   { bg: '#FCE8E6', text: '#C0271B' },
+  massive: { bg: '#F3E8FD', text: '#7219A0' },
 };
 
 export const Colors = {
@@ -35,15 +53,15 @@ export const Colors = {
     background: baseColors.background,
     surface: baseColors.card,
     surfaceElevated: baseColors.card,
+    surfaceWarm: baseColors.cardWarm,
     text: baseColors.textPrimary,
     textSecondary: baseColors.textSecondary,
     textMuted: baseColors.textMuted,
     border: baseColors.border,
     borderLight: baseColors.borderLight,
   },
-  
-  // For backwards compatibility with existing imports temporarily, 
-  // map 'dark' to 'light' since this is a strictly light-mode app now
+
+  // Map dark → light (strictly light-mode app)
   dark: {
     background: baseColors.background,
     surface: baseColors.card,
@@ -55,18 +73,20 @@ export const Colors = {
     border: baseColors.border,
     borderBright: baseColors.border,
   },
-  
+
   accent: {
     primary: baseColors.primary,
     secondary: baseColors.secondary,
-    mint: baseColors.success, // Aliased for legacy
-    lavender: badgeColors.massive.text, // Aliased for legacy
-    coral: baseColors.error, // Aliased for legacy
-    sky: badgeColors.tiny.text, // Aliased for legacy
-    gold: baseColors.secondary, // Aliased for legacy
-    peach: badgeColors.medium.text, // Aliased for legacy
+    accent: baseColors.accent,
+    accentLight: baseColors.accentLight,
+    mint: baseColors.success,
+    lavender: badgeColors.massive.text,
+    coral: baseColors.error,
+    sky: badgeColors.tiny.text,
+    gold: baseColors.secondary,
+    peach: baseColors.warning,
   },
-  
+
   semantic: {
     success: baseColors.success,
     warning: baseColors.warning,
@@ -76,7 +96,7 @@ export const Colors = {
 
   badges: badgeColors,
 
-  // Bristol Scale (Light to Dark Brown)
+  // Bristol Scale (warm light to dark browns)
   bristol: [
     '#D7CCC8', // 1
     '#BCAAA4', // 2
@@ -90,29 +110,24 @@ export const Colors = {
 
 /**
  * Adds opacity to a hex color
- * @param hexColor Hex color string
- * @param opacity Opacity value between 0 and 1
- * @returns rgba string
  */
 export const withOpacity = (hexColor: string, opacity: number): string => {
   if (hexColor.startsWith('rgba')) return hexColor;
-  
+
   let hex = hexColor.replace('#', '');
   if (hex.length === 3) {
     hex = `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`;
   }
-  
+
   const r = parseInt(hex.substring(0, 2), 16);
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
-  
+
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
 /**
  * Gets the color for a Bristol scale type
- * @param scale Bristol scale type (1-7)
- * @returns Hex color string
  */
 export const bristolColor = (scale: number): string => {
   const index = Math.max(1, Math.min(7, Math.round(scale))) - 1;

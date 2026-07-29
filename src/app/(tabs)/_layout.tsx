@@ -1,17 +1,23 @@
 /**
  * Tabs Layout — PoopTracker
- * Native iOS 18 bottom tab bar with 8pt spacing system & elevated center (+) CTA button.
+ * High-fidelity, floating glassmorphism tab bar with a prominent FAB.
  */
 import { Tabs, useRouter } from 'expo-router';
 import { Text, View, StyleSheet, Platform, TouchableOpacity } from 'react-native';
+import { Home, Rss, Trophy, User } from 'lucide-react-native';
+import { BlurView } from 'expo-blur';
 
 const DESIGN_COLORS = {
-  background: '#F7F7F5',
-  card: '#FFFFFF',
-  primary: '#7C4D2E',
-  textPrimary: '#1B1B1B',
-  textSecondary: '#6B6B6B',
-  border: '#ECECEC',
+  background: '#2D1B15',
+  card: '#3E2723',
+  primary: '#EFEBE9',
+  accent: '#A95C33',
+  accentSurface: '#4E342E',
+  primarySurface: '#3E2723',
+  success: '#33691E',
+  textPrimary: '#EFEBE9',
+  textSecondary: '#BCAAA4',
+  border: '#5D4037',
 };
 
 export default function TabLayout() {
@@ -22,28 +28,40 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: DESIGN_COLORS.card,
-          borderTopWidth: 1,
-          borderTopColor: DESIGN_COLORS.border,
           position: 'absolute',
-          bottom: Platform.OS === 'ios' ? 24 : 16,
-          left: 16,
-          right: 16,
-          borderRadius: 28,
-          height: 68,
+          bottom: 24,
+          alignSelf: 'center',
+          width: '90%',
+          maxWidth: 400,
+          ...(Platform.OS === 'web' && {
+            left: '50%',
+            transform: [{ translateX: '-50%' as any }],
+          }),
+          borderRadius: 40,
+          height: 72,
+          borderTopWidth: 0,
+          backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(45, 27, 21, 0.7)',
           paddingBottom: 0,
-          paddingHorizontal: 8,
+          paddingHorizontal: 16,
           ...Platform.select({
             ios: {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.08,
-              shadowRadius: 16,
+              shadowColor: '#1A0E0B',
+              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: 0.15,
+              shadowRadius: 20,
             },
-            android: { elevation: 8 },
-            web: { boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' },
+            android: { elevation: 12 },
+            web: { 
+              boxShadow: '0 10px 30px rgba(26, 14, 11, 0.15)',
+              backdropFilter: 'blur(24px)',
+            },
           }),
         },
+        tabBarBackground: () => (
+          Platform.OS === 'ios' ? (
+            <BlurView tint="dark" intensity={70} style={{ flex: 1, borderRadius: 40, overflow: 'hidden' }} />
+          ) : undefined
+        ),
         tabBarShowLabel: false,
         sceneStyle: { backgroundColor: DESIGN_COLORS.background },
       }}
@@ -55,7 +73,11 @@ export default function TabLayout() {
           title: 'Home',
           tabBarIcon: ({ focused }) => (
             <View style={styles.tabItem}>
-              <Text style={[styles.tabIcon, focused && styles.activeTabIcon]}>🏠</Text>
+              <Home
+                size={22}
+                color={focused ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary}
+                style={[styles.tabIcon, focused && styles.activeTabIcon]}
+              />
               <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>Home</Text>
             </View>
           ),
@@ -69,7 +91,11 @@ export default function TabLayout() {
           title: 'Reports',
           tabBarIcon: ({ focused }) => (
             <View style={styles.tabItem}>
-              <Text style={[styles.tabIcon, focused && styles.activeTabIcon]}>📍</Text>
+              <Rss
+                size={22}
+                color={focused ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary}
+                style={[styles.tabIcon, focused && styles.activeTabIcon]}
+              />
               <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>Reports</Text>
             </View>
           ),
@@ -81,16 +107,15 @@ export default function TabLayout() {
         name="report"
         options={{
           title: 'Report',
-          tabBarButton: () => (
+          tabBarButton: (props) => (
             <TouchableOpacity
-              style={styles.centerBtnContainer}
-              activeOpacity={0.85}
+              activeOpacity={0.9}
               onPress={() => router.push('/(modals)/quick-drop')}
+              style={[props.style, styles.centerBtnContainer]}
             >
               <View style={styles.centerBtnCircle}>
                 <Text style={styles.centerBtnPlus}>+</Text>
               </View>
-              <Text style={styles.centerBtnLabel}>Report</Text>
             </TouchableOpacity>
           ),
         }}
@@ -103,8 +128,12 @@ export default function TabLayout() {
           title: 'Leaderboard',
           tabBarIcon: ({ focused }) => (
             <View style={styles.tabItem}>
-              <Text style={[styles.tabIcon, focused && styles.activeTabIcon]}>🏆</Text>
-              <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>Leaderboard</Text>
+              <Trophy
+                size={22}
+                color={focused ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary}
+                style={[styles.tabIcon, focused && styles.activeTabIcon]}
+              />
+              <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>Rank</Text>
             </View>
           ),
         }}
@@ -117,7 +146,11 @@ export default function TabLayout() {
           title: 'Profile',
           tabBarIcon: ({ focused }) => (
             <View style={styles.tabItem}>
-              <Text style={[styles.tabIcon, focused && styles.activeTabIcon]}>👤</Text>
+              <User
+                size={22}
+                color={focused ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary}
+                style={[styles.tabIcon, focused && styles.activeTabIcon]}
+              />
               <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>Profile</Text>
             </View>
           ),
@@ -131,64 +164,56 @@ const styles = StyleSheet.create({
   tabItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
-    paddingTop: 6,
+    gap: 4,
+    marginTop: 12, // Pushes the normal tabs down to center them vertically
   },
   tabIcon: {
-    fontSize: 20,
     opacity: 0.6,
   },
   activeTabIcon: {
     opacity: 1,
-    transform: [{ scale: 1.1 }],
+    transform: [{ scale: 1.15 }],
   },
   tabLabel: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Nunito-Bold',
     color: DESIGN_COLORS.textSecondary,
   },
   activeTabLabel: {
     color: DESIGN_COLORS.primary,
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
   },
 
-  // ELEVATED CENTER CTA (+) BUTTON
   centerBtnContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -20,
+    marginBottom: 8, // Pushes the + button up to align with the tabs
   },
   centerBtnCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: DESIGN_COLORS.primary,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: DESIGN_COLORS.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: DESIGN_COLORS.card,
+    borderWidth: 4,
+    borderColor: '#2D1B15',
     ...Platform.select({
       ios: {
-        shadowColor: DESIGN_COLORS.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.35,
-        shadowRadius: 8,
+        shadowColor: DESIGN_COLORS.accent,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 16,
       },
-      android: { elevation: 8 },
-      web: { boxShadow: '0 4px 14px rgba(124, 77, 46, 0.35)' },
+      android: { elevation: 12 },
+      web: { boxShadow: '0 0 30px rgba(169, 92, 51, 0.6)' },
     }),
   },
   centerBtnPlus: {
-    fontSize: 30,
-    fontWeight: '600',
+    fontSize: 28,
+    fontFamily: 'Nunito-ExtraBold',
     color: '#FFFFFF',
     marginTop: -2,
-  },
-  centerBtnLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: DESIGN_COLORS.primary,
-    marginTop: 2,
   },
 });

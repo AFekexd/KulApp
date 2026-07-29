@@ -18,18 +18,19 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import gsap from 'gsap';
+import { X, ChevronLeft, ChevronRight, MapPin, Plus, Globe, Users, Lock } from 'lucide-react-native';
 import { useDropStore } from '@/stores/dropStore';
 import { useFeedStore } from '@/stores/feedStore';
 import { useAuthStore } from '@/stores/authStore';
 
 const DESIGN_COLORS = {
-  background: '#F7F7F5',
-  card: '#FFFFFF',
-  primary: '#7C4D2E',
-  secondary: '#C89A5A',
-  textPrimary: '#1B1B1B',
-  textSecondary: '#6B6B6B',
-  border: '#ECECEC',
+  background: '#2D1B15',
+  card: '#3E2723',
+  primary: '#8D6E63',
+  secondary: '#A95C33',
+  textPrimary: '#EFEBE9',
+  textSecondary: '#BCAAA4',
+  border: '#5D4037',
 };
 
 const BRISTOL_TYPES = [
@@ -230,7 +231,7 @@ export default function QuickDropModal() {
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>New Poop Drop 💩</Text>
           <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
-            <Text style={styles.closeBtnText}>✕</Text>
+            <X size={16} color={DESIGN_COLORS.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -241,10 +242,10 @@ export default function QuickDropModal() {
               <Text style={styles.sectionLabel}>1. Texture (Bristol Scale)</Text>
               <View style={styles.arrowScrollRow}>
                 <TouchableOpacity style={styles.scrollArrowBtn} onPress={() => scrollBristol('left')}>
-                  <Text style={styles.scrollArrowText}>‹</Text>
+                  <ChevronLeft size={16} color={DESIGN_COLORS.textPrimary} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.scrollArrowBtn} onPress={() => scrollBristol('right')}>
-                  <Text style={styles.scrollArrowText}>›</Text>
+                  <ChevronRight size={16} color={DESIGN_COLORS.textPrimary} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -300,7 +301,7 @@ export default function QuickDropModal() {
 
           {/* Section 3: Location (Search & Custom Selection) */}
           <View style={styles.formSection}>
-            <Text style={styles.sectionLabel}>3. Location 📍</Text>
+            <Text style={styles.sectionLabel}>3. Location</Text>
 
             {/* Location Search Input */}
             <TextInput
@@ -328,9 +329,12 @@ export default function QuickDropModal() {
                       setLocationSearch(loc);
                     }}
                   >
-                    <Text style={[styles.locOptionText, isSelected && styles.locOptionTextActive]}>
-                      📍 {loc}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <MapPin size={12} color={isSelected ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary} />
+                      <Text style={[styles.locOptionText, isSelected && styles.locOptionTextActive]}>
+                        {loc}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 );
               })}
@@ -340,9 +344,12 @@ export default function QuickDropModal() {
                   style={[styles.locOptionBtn, styles.locOptionActive]}
                   onPress={() => setSelectedLocation(locationSearch.trim())}
                 >
-                  <Text style={styles.locOptionTextActive}>
-                    ➕ Add "{locationSearch.trim()}"
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Plus size={12} color={DESIGN_COLORS.primary} />
+                    <Text style={styles.locOptionTextActive}>
+                      Add "{locationSearch.trim()}"
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               )}
             </View>
@@ -371,9 +378,15 @@ export default function QuickDropModal() {
                   style={[styles.privacyBtn, privacy === p && styles.privacyBtnActive]}
                   onPress={() => setPrivacy(p)}
                 >
-                  <Text style={[styles.privacyText, privacy === p && styles.privacyTextActive]}>
-                    {p === 'public' ? '🌍 Public' : p === 'friends' ? '👥 Friends' : p === 'group' ? '🏘️ Group' : '🔒 Private'}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    {p === 'public' ? <Globe size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} /> :
+                     p === 'friends' ? <Users size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} /> :
+                     p === 'group' ? <Users size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} /> :
+                     <Lock size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
+                    <Text style={[styles.privacyText, privacy === p && styles.privacyTextActive]}>
+                      {p === 'public' ? 'Public' : p === 'friends' ? 'Friends' : p === 'group' ? 'Group' : 'Private'}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
@@ -387,7 +400,10 @@ export default function QuickDropModal() {
                       key={g}
                       style={[styles.locOptionBtn, styles.locOptionActive]}
                     >
-                      <Text style={styles.locOptionTextActive}>🏘️ {g}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Users size={12} color={DESIGN_COLORS.primary} />
+                        <Text style={styles.locOptionTextActive}>{g}</Text>
+                      </View>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -435,13 +451,13 @@ const styles = StyleSheet.create({
     gap: 16,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: '#1A0E0B',
         shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.12,
+        shadowOpacity: 0.2,
         shadowRadius: 16,
       },
       android: { elevation: 12 },
-      web: { boxShadow: '0 -4px 24px rgba(0,0,0,0.12)' },
+      web: { boxShadow: '0 -4px 24px rgba(26,14,11,0.2)' },
     }),
   },
   sheetHandle: {
@@ -458,20 +474,20 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     color: DESIGN_COLORS.textPrimary,
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F7F7F5',
+    backgroundColor: '#4E342E',
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeBtnText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textSecondary,
   },
   formContent: {
@@ -488,12 +504,12 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textPrimary,
   },
   subLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: DESIGN_COLORS.textSecondary,
     marginTop: 2,
   },
@@ -505,7 +521,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#F7F7F5',
+    backgroundColor: '#4E342E',
     borderWidth: 1,
     borderColor: DESIGN_COLORS.border,
     alignItems: 'center',
@@ -513,7 +529,7 @@ const styles = StyleSheet.create({
   },
   scrollArrowText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textPrimary,
     marginTop: -2,
   },
@@ -528,7 +544,7 @@ const styles = StyleSheet.create({
   },
   bristolCard: {
     width: 105,
-    backgroundColor: '#F7F7F5',
+    backgroundColor: '#4E342E',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: DESIGN_COLORS.border,
@@ -545,12 +561,12 @@ const styles = StyleSheet.create({
   },
   bristolScaleNum: {
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textPrimary,
   },
   bristolName: {
     fontSize: 10,
-    fontWeight: '500',
+    fontFamily: 'Inter-Regular',
     color: DESIGN_COLORS.textSecondary,
   },
   textWhite: {
@@ -565,7 +581,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sizeOptionBtn: {
-    backgroundColor: '#F7F7F5',
+    backgroundColor: '#4E342E',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 12,
@@ -578,14 +594,14 @@ const styles = StyleSheet.create({
   },
   sizeOptionText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textPrimary,
   },
   sizeOptionTextActive: {
     color: '#FFFFFF',
   },
   locOptionBtn: {
-    backgroundColor: '#F7F7F5',
+    backgroundColor: '#4E342E',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
@@ -593,20 +609,20 @@ const styles = StyleSheet.create({
     borderColor: DESIGN_COLORS.border,
   },
   locOptionActive: {
-    backgroundColor: '#F7F2EE',
+    backgroundColor: '#5D4037',
     borderColor: DESIGN_COLORS.primary,
   },
   locOptionText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: DESIGN_COLORS.textSecondary,
   },
   locOptionTextActive: {
     color: DESIGN_COLORS.primary,
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
   },
   textInput: {
-    backgroundColor: '#F7F7F5',
+    backgroundColor: '#4E342E',
     borderWidth: 1,
     borderColor: DESIGN_COLORS.border,
     borderRadius: 14,
@@ -621,7 +637,7 @@ const styles = StyleSheet.create({
   },
   privacyBtn: {
     flex: 1,
-    backgroundColor: '#F7F7F5',
+    backgroundColor: '#4E342E',
     paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
@@ -634,12 +650,12 @@ const styles = StyleSheet.create({
   },
   privacyText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: DESIGN_COLORS.textSecondary,
   },
   privacyTextActive: {
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
   },
   footerRow: {
     marginTop: 4,
@@ -661,7 +677,7 @@ const styles = StyleSheet.create({
   },
   submitBtnText: {
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },

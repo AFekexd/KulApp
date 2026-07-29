@@ -19,16 +19,20 @@ import { useDropStore } from '@/stores/dropStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useFriendshipStore } from '@/stores/friendshipStore';
 import { useGroupStore } from '@/stores/groupStore';
+import { User, Pencil, Flame, Users, Home, Ghost, Package } from 'lucide-react-native';
 
 const DESIGN_COLORS = {
-  background: '#F7F7F5',
-  card: '#FFFFFF',
-  primary: '#7C4D2E',
-  secondary: '#C89A5A',
-  success: '#4CAF50',
-  textPrimary: '#1B1B1B',
-  textSecondary: '#6B6B6B',
-  border: '#ECECEC',
+  background: '#2D1B15',
+  card: '#3E2723',
+  primary: '#8D6E63',
+  secondary: '#A95C33',
+  accent: '#A95C33',
+  accentSurface: '#4E342E',
+  primarySurface: '#4E342E',
+  success: '#33691E',
+  textPrimary: '#EFEBE9',
+  textSecondary: '#BCAAA4',
+  border: '#5D4037',
 };
 
 export default function ProfileScreen() {
@@ -122,7 +126,10 @@ export default function ProfileScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Title */}
-          <Text style={styles.title}>Profile & Settings 👤</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={styles.title}>Profile & Settings</Text>
+            <User size={28} color={DESIGN_COLORS.textPrimary} />
+          </View>
 
           {/* User Banner Card */}
           <View style={styles.userCard}>
@@ -140,8 +147,9 @@ export default function ProfileScreen() {
                     </View>
                   </View>
                   <Text style={styles.userHandle}>@{profile?.username || 'user'}</Text>
-                  <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.editBtn}>
-                    <Text style={styles.editBtnText}>✏️ Edit Profile</Text>
+                  <TouchableOpacity onPress={() => setIsEditing(true)} style={[styles.editBtn, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+                    <Pencil size={14} color={DESIGN_COLORS.primary} />
+                    <Text style={styles.editBtnText}>Edit Profile</Text>
                   </TouchableOpacity>
                 </>
               ) : (
@@ -185,7 +193,10 @@ export default function ProfileScreen() {
             <View style={styles.metricDivider} />
             <View style={styles.metricBox}>
               <Text style={styles.metricVal}>{currentStreak} Days</Text>
-              <Text style={styles.metricLabel}>Best Streak 🔥</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Text style={styles.metricLabel}>Best Streak</Text>
+                <Flame size={14} color={DESIGN_COLORS.accent} />
+              </View>
             </View>
             <View style={styles.metricDivider} />
             <View style={styles.metricBox}>
@@ -197,7 +208,10 @@ export default function ProfileScreen() {
           {/* FRIENDS & GROUPS MANAGEMENT SECTION */}
           <View style={styles.socialCard}>
             <View style={styles.socialHeaderRow}>
-              <Text style={styles.sectionHeader}>Friends & Groups 👥</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={styles.sectionHeader}>Friends & Groups</Text>
+                <Users size={20} color={DESIGN_COLORS.textPrimary} />
+              </View>
               <View style={styles.socialTabToggle}>
                 <TouchableOpacity
                   style={[styles.socialTabBtn, socialTab === 'friends' && styles.socialTabActive]}
@@ -295,8 +309,8 @@ export default function ProfileScreen() {
                   {groups.length > 0 ? (
                     groups.map((group) => (
                       <View key={group.id} style={styles.socialRow}>
-                        <View style={[styles.avatarMini, { backgroundColor: '#F7F2EE' }]}>
-                          <Text style={[styles.avatarMiniText, { color: DESIGN_COLORS.primary }]}>🏘️</Text>
+                        <View style={[styles.avatarMini, { backgroundColor: DESIGN_COLORS.primarySurface }]}>
+                          <Home size={16} color={DESIGN_COLORS.primary} />
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.socialName}>{group.name}</Text>
@@ -354,7 +368,10 @@ export default function ProfileScreen() {
 
             <View style={[styles.settingRow, styles.noBorderRow]}>
               <View style={styles.settingTextCol}>
-                <Text style={styles.settingLabel}>Stealth Mode 🥷</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={styles.settingLabel}>Stealth Mode</Text>
+                  <Ghost size={16} color={DESIGN_COLORS.textPrimary} />
+                </View>
                 <Text style={styles.settingSub}>Hide online indicator from active feed</Text>
               </View>
               <Switch
@@ -372,7 +389,10 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
               onPress={() => Alert.alert('Export Complete 📦', 'Your drop data history has been exported as JSON.')}
             >
-              <Text style={styles.actionBtnText}>Export Personal History 📦</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={styles.actionBtnText}>Export Personal History</Text>
+                <Package size={16} color={DESIGN_COLORS.textPrimary} />
+              </View>
             </TouchableOpacity>
 
             <TouchableOpacity 
@@ -406,7 +426,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     color: DESIGN_COLORS.textPrimary,
   },
   userCard: {
@@ -429,8 +449,8 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 20,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    fontFamily: 'Inter-Bold',
+    color: '#2D1B15',
   },
   userMetaCol: {
     flex: 1,
@@ -443,23 +463,23 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     color: DESIGN_COLORS.textPrimary,
   },
   levelPill: {
-    backgroundColor: '#F7F2EE',
+    backgroundColor: DESIGN_COLORS.primarySurface,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
   },
   levelPillText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.primary,
   },
   userHandle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: DESIGN_COLORS.textSecondary,
   },
   editBtn: {
@@ -467,7 +487,7 @@ const styles = StyleSheet.create({
   },
   editBtnText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.primary,
   },
   editFormGroup: {
@@ -475,11 +495,11 @@ const styles = StyleSheet.create({
   },
   editLabel: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textSecondary,
   },
   editInput: {
-    backgroundColor: '#F7F7F5',
+    backgroundColor: DESIGN_COLORS.background,
     borderWidth: 1,
     borderColor: DESIGN_COLORS.border,
     borderRadius: 10,
@@ -501,11 +521,11 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
   cancelBtn: {
-    backgroundColor: '#F7F7F5',
+    backgroundColor: DESIGN_COLORS.background,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -514,7 +534,7 @@ const styles = StyleSheet.create({
   },
   cancelBtnText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: DESIGN_COLORS.textSecondary,
   },
   metricsRow: {
@@ -532,12 +552,12 @@ const styles = StyleSheet.create({
   },
   metricVal: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textPrimary,
   },
   metricLabel: {
     fontSize: 11,
-    fontWeight: '500',
+    fontFamily: 'Inter-Regular',
     color: DESIGN_COLORS.textSecondary,
   },
   metricDivider: {
@@ -560,7 +580,7 @@ const styles = StyleSheet.create({
   },
   socialTabToggle: {
     flexDirection: 'row',
-    backgroundColor: '#F7F7F5',
+    backgroundColor: DESIGN_COLORS.background,
     borderRadius: 12,
     padding: 2,
   },
@@ -574,12 +594,12 @@ const styles = StyleSheet.create({
   },
   socialTabText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: DESIGN_COLORS.textSecondary,
   },
   socialTextActive: {
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
   },
   socialContentStack: {
     gap: 12,
@@ -590,7 +610,7 @@ const styles = StyleSheet.create({
   },
   socialInput: {
     flex: 1,
-    backgroundColor: '#F7F7F5',
+    backgroundColor: DESIGN_COLORS.background,
     borderWidth: 1,
     borderColor: DESIGN_COLORS.border,
     borderRadius: 12,
@@ -607,8 +627,8 @@ const styles = StyleSheet.create({
   },
   addBtnText: {
     fontSize: 12,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    fontFamily: 'Inter-Bold',
+    color: '#EFEBE9',
   },
   socialList: {
     gap: 10,
@@ -631,12 +651,12 @@ const styles = StyleSheet.create({
   },
   avatarMiniText: {
     fontSize: 11,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    fontFamily: 'Inter-Bold',
+    color: '#2D1B15',
   },
   socialName: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textPrimary,
   },
   socialSub: {
@@ -645,7 +665,7 @@ const styles = StyleSheet.create({
   },
   removeText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: '#C5221F',
   },
   emptySocialText: {
@@ -664,7 +684,7 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     color: DESIGN_COLORS.textPrimary,
   },
   settingRow: {
@@ -686,7 +706,7 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textPrimary,
   },
   settingSub: {
@@ -706,16 +726,16 @@ const styles = StyleSheet.create({
   },
   actionBtnText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textPrimary,
   },
   signOutBtn: {
-    backgroundColor: '#FCE8E6',
-    borderColor: '#F8D7DA',
+    backgroundColor: '#3E2723',
+    borderColor: '#5D4037',
   },
   signOutBtnText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
     color: '#C5221F',
   },
 });

@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLeaderboardStore, LeaderboardUser } from '@/stores/leaderboardStore';
 import { useFeedStore, FeedItem } from '@/stores/feedStore';
 import { useDropStore } from '@/stores/dropStore';
@@ -87,1008 +88,361 @@ export default function HomeScreen() {
     return `${Math.floor(hours / 24)} d ago`;
   };
 
-  return (
-    <View style={styles.screenOuter}>
+        return (
+    <LinearGradient colors={['#2D1B15', '#3E2723']} style={styles.screenOuter}>
       <SafeAreaView style={styles.container} edges={['top']}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* HEADER */}
-          <View style={styles.headerRow}>
-            <View style={styles.headerTitleGroup}>
-              <Text style={styles.appTitle}>PoopTracker</Text>
-              <Text style={styles.appSubtitle}>Community poop tracking</Text>
+          {/* FLOATING HEADER */}
+          <View style={styles.floatingHeader}>
+            <View style={styles.floatingTitleGroup}>
+              <Text style={styles.appTitle}>💩 PoopTracker</Text>
+              <Text style={styles.appSubtitle}>Ready to drop one?</Text>
             </View>
-
             <TouchableOpacity 
-              style={styles.bellButton}
-              activeOpacity={0.7}
-              onPress={() => {
-                setNotificationVisible(true);
-                setUnreadNotifications(false);
-              }}
+              style={styles.floatingProfileBtn} 
+              onPress={() => router.push('/profile')}
             >
-              <Text style={styles.bellIcon}>🔔</Text>
-              {unreadNotifications && <View style={styles.bellDot} />}
+              <Text style={{fontSize: 22}}>🧻</Text>
             </TouchableOpacity>
           </View>
 
-          {/* LARGE STAT CARDS */}
-          <View style={styles.statsContainer}>
-            {/* Card 1: Today's Reports */}
-            <View style={styles.statCard}>
-              <View style={styles.statHeaderRow}>
-                <Text style={styles.statLabel}>Today's Reports</Text>
-                <Text style={styles.statEmoji}>💩</Text>
-              </View>
-              <Text style={styles.statNumber}>{todayCount}</Text>
-              <Text style={styles.statSubtext}>{todayCount > 0 ? `${todayCount} logged today!` : 'No drops yet today'}</Text>
-            </View>
-
-            {/* Card 2: Community Rank */}
-            <View style={styles.statCard}>
-              <View style={styles.statHeaderRow}>
-                <Text style={styles.statLabel}>Community Rank</Text>
-                <Text style={styles.statEmoji}>🏆</Text>
-              </View>
-              <Text style={styles.statValueHighlight}>{totalLoggedCount > 0 ? '#1 Active' : 'Unranked'}</Text>
-              <Text style={styles.statSubtext}>Streak: {currentStreak} Days 🔥</Text>
-            </View>
-
-            {/* Card 3: Poop Score */}
-            <View style={[styles.statCard, styles.fullWidthStatCard]}>
-              <View style={styles.statHeaderRow}>
-                <Text style={styles.statLabel}>Poop Score</Text>
-                <Text style={styles.statScoreBadge}>Level {currentLevel}</Text>
-              </View>
-              <Text style={styles.statNumber}>{currentXP.toLocaleString()} XP</Text>
+            {/* WIDGET GRID (2-COLUMN) */}
+            <View style={styles.widgetGrid}>
               
-              {/* Progress bar to next level */}
-              <View style={styles.progressContainer}>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
-                </View>
-                <Text style={styles.progressText}>{currentXP.toLocaleString()} / {nextLevelXP.toLocaleString()} XP to Level {currentLevel + 1}</Text>
+              {/* WIDGET 1: 1x1 Square Stats */}
+              <View style={[styles.widget1x1, styles.widgetBrown, styles.shadowBrown, styles.whiteBorder]}>
+                <Text style={styles.widgetEmoji}>{todayCount > 0 ? '💩' : '🚽'}</Text>
+                <Text style={[styles.widgetNumber, styles.whiteText]}>{todayCount}</Text>
+                <Text style={[styles.widgetLabel, styles.whiteText]}>Drops Today</Text>
               </View>
-            </View>
-          </View>
 
-          {/* LEADERBOARD SECTION */}
-          <View style={styles.cardSection}>
-            <View style={styles.cardHeaderRow}>
-              <Text style={styles.sectionCardTitle}>🏆 Top Poopers</Text>
-              <View style={styles.activePill}>
-                <Text style={styles.activePillText}>This Week</Text>
+              {/* WIDGET 2: 1x1 Square Rank */}
+              <View style={[styles.widget1x1, styles.widgetOlive, styles.shadowOlive, styles.whiteBorder]}>
+                <Text style={styles.widgetEmoji}>🏅</Text>
+                <Text style={[styles.widgetNumber, styles.whiteText]}>{totalLoggedCount > 0 ? '#1' : '-'}</Text>
+                <Text style={[styles.widgetLabel, styles.whiteText]}>Local Rank</Text>
               </View>
-            </View>
 
-            <View style={styles.leaderboardList}>
-              {topUsers.length > 0 ? (
-                topUsers.slice(0, 5).map((user: LeaderboardUser, idx: number) => (
-                  <View 
-                    key={user.id || idx} 
-                    style={[
-                      styles.leaderboardRow,
-                      idx === Math.min(topUsers.length, 5) - 1 && styles.noBorderRow
-                    ]}
-                  >
-                    <View style={[
-                      styles.rankBadge,
-                      idx === 0 ? styles.goldBadge : idx === 1 ? styles.silverBadge : idx === 2 ? styles.bronzeBadge : styles.neutralBadge
-                    ]}>
-                      <Text style={[
-                        styles.rankBadgeText,
-                        idx < 3 ? styles.medalText : styles.neutralRankText
-                      ]}>
-                        {user.badge}
-                      </Text>
-                    </View>
-
-                    <View style={styles.avatarCircle}>
-                      <Text style={styles.avatarInitials}>
-                        {user.username.slice(0, 2).toUpperCase()}
-                      </Text>
-                    </View>
-
-                    <View style={styles.userInfoCol}>
-                      <Text style={styles.usernameText} numberOfLines={1}>
-                        {user.username}
-                      </Text>
-                      <Text style={styles.userTitleText} numberOfLines={1}>
-                        {user.title}
-                      </Text>
-                    </View>
-
-                    <View style={styles.xpCol}>
-                      <Text style={styles.xpNumberText}>{user.points.toLocaleString()} XP</Text>
-                    </View>
-                  </View>
-                ))
-              ) : (
-                <View style={styles.emptyLeaderboardBox}>
-                  <Text style={styles.emptyLeaderboardText}>No community rankings yet.</Text>
-                  <Text style={styles.emptyLeaderboardSub}>Log your first drop to get on the leaderboard! 💩</Text>
-                </View>
-              )}
-            </View>
-
-            <TouchableOpacity 
-              style={styles.fullLeaderboardBtn}
-              activeOpacity={0.7}
-              onPress={() => router.push('/(tabs)/stats')}
-            >
-              <Text style={styles.fullLeaderboardBtnText}>View Full Leaderboard</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* RECENT REPORTS SECTION */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Recent Reports</Text>
-              <TouchableOpacity onPress={() => router.push('/(tabs)/feed')}>
-                <Text style={styles.seeAllText}>See all 〉</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.reportsStack}>
-              {feedItems.length > 0 ? (
-                feedItems.slice(0, 4).map((report: FeedItem) => {
-                  const badgeStyle = getSizeBadgeStyle(report.size_badge || 'Medium');
-                  return (
-                    <View key={report.id} style={styles.reportCard}>
-                      <View style={styles.reportHeader}>
-                        <View style={styles.reportIconCircle}>
-                          <Text style={styles.reportPoopIcon}>💩</Text>
-                        </View>
-
-                        <View style={styles.reportMainInfo}>
-                          <View style={styles.reportTitleRow}>
-                            <Text style={styles.reportLocationText}>{report.location}</Text>
-                            <View style={[styles.sizeBadge, { backgroundColor: badgeStyle.bg }]}>
-                              <Text style={[styles.sizeBadgeText, { color: badgeStyle.text }]}>
-                                {report.size_badge}
-                              </Text>
-                            </View>
-                          </View>
-
-                          <View style={styles.reportMetaRow}>
-                            <Text style={styles.verificationBadge}>
-                              ✓ Verified {report.verification_pct}%
-                            </Text>
-                            <Text style={styles.metaDot}>•</Text>
-                            <Text style={styles.reportTimeText}>{formatTimeAgo(report.created_at)}</Text>
-                          </View>
-                        </View>
-                      </View>
-
-                      {/* Reaction / Upvote Footer */}
-                      <View style={styles.reportFooter}>
-                        <Text style={styles.reactionCountText}>
-                          {report.reactions_count} {report.reactions_count === 1 ? 'reaction' : 'reactions'}
-                        </Text>
-
-                        <TouchableOpacity 
-                          style={[
-                            styles.upvoteBtn,
-                            report.is_upvoted && styles.upvoteBtnActive
-                          ]}
-                          activeOpacity={0.7}
-                          onPress={() => toggleUpvote(report.id)}
-                        >
-                          <Text style={styles.upvoteIcon}>👍</Text>
-                          <Text style={[
-                            styles.upvoteLabel,
-                            report.is_upvoted && styles.upvoteLabelActive
-                          ]}>
-                            {report.is_upvoted ? 'Upvoted' : 'Upvote'}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  );
-                })
-              ) : (
-                <View style={styles.emptyReportCard}>
-                  <Text style={styles.emptyReportEmoji}>💩</Text>
-                  <Text style={styles.emptyReportTitle}>No recent reports</Text>
-                  <Text style={styles.emptyReportSub}>Tap the + button below to log your first drop!</Text>
-                </View>
-              )}
-            </View>
-          </View>
-
-          {/* ACHIEVEMENTS CARD */}
-          <View style={styles.cardSection}>
-            <Text style={styles.sectionCardTitle}>Achievements</Text>
-            
-            <View style={styles.achievementsGrid}>
-              <TouchableOpacity 
-                style={styles.achievementItem} 
-                activeOpacity={0.7}
-                onPress={() => setSelectedAchievement(totalLoggedCount > 0 ? 'First Dump: Logged your first stool session! Unlocked 💩' : 'First Dump: Log your first drop to unlock!')}
-              >
-                <Text style={styles.achievementEmoji}>💩</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.achievementName}>First Dump</Text>
-                  <Text style={styles.achievementSub}>{totalLoggedCount > 0 ? 'Unlocked ✓' : 'Locked 🔒'}</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.achievementItem}
-                activeOpacity={0.7}
-                onPress={() => setSelectedAchievement(totalLoggedCount >= 5 ? 'Top 100: Ranked in community! Unlocked 🏆' : 'Top 100: Log 5 drops to unlock!')}
-              >
-                <Text style={styles.achievementEmoji}>🏆</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.achievementName}>Top 100</Text>
-                  <Text style={styles.achievementSub}>{totalLoggedCount >= 5 ? 'Unlocked ✓' : 'Locked 🔒'}</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.achievementItem}
-                activeOpacity={0.7}
-                onPress={() => setSelectedAchievement(currentStreak >= 7 ? '7-Day Streak: Logged drops 7 days in a row! Unlocked 🔥' : '7-Day Streak: Log 7 days in a row!')}
-              >
-                <Text style={styles.achievementEmoji}>🔥</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.achievementName}>7-Day Streak</Text>
-                  <Text style={styles.achievementSub}>{currentStreak >= 7 ? 'Unlocked ✓' : 'Locked 🔒'}</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.achievementItem}
-                activeOpacity={0.7}
-                onPress={() => setSelectedAchievement(totalLoggedCount >= 10 ? 'Community Hero: 10+ verified drops! Unlocked 👑' : 'Community Hero: Log 10+ drops!')}
-              >
-                <Text style={styles.achievementEmoji}>👑</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.achievementName}>Community Hero</Text>
-                  <Text style={styles.achievementSub}>{totalLoggedCount >= 10 ? 'Unlocked ✓' : 'Locked 🔒'}</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* PROFILE PREVIEW CARD */}
-          <View style={styles.cardSection}>
-            <View style={styles.profileHeaderRow}>
-              <View style={styles.profileAvatar}>
-                <Text style={styles.profileAvatarText}>{userInitials}</Text>
-              </View>
-              <View style={styles.profileMetaGroup}>
-                <View style={styles.profileNameRow}>
-                  <Text style={styles.profileName}>{userDisplayName}</Text>
-                  <View style={styles.profileLevelPill}>
-                    <Text style={styles.profileLevelText}>Level {currentLevel}</Text>
+              {/* WIDGET 3: 2x2 Large Pet Centerpiece */}
+              <View style={[styles.widget2x2, styles.shadowSoft, styles.whiteBorder, { backgroundColor: '#3E2723' }]}>
+                <View style={styles.levelWidgetHeader}>
+                  <Text style={[styles.widgetTitle, { color: '#EFEBE9' }]}>Your Log</Text>
+                  <View style={styles.levelPill}>
+                    <Text style={[styles.levelPillText, { color: '#EFEBE9' }]}>Lvl {currentLevel}</Text>
                   </View>
                 </View>
-                <Text style={styles.profileHandle}>@{userHandle}</Text>
+                
+                <View style={styles.petContainer}>
+                  <Text style={styles.petEmoji}>{currentLevel < 2 ? '💩' : (currentLevel < 4 ? '💩💩' : '💩💩💩')}</Text>
+                </View>
+
+                {/* Interactive Action Buttons */}
+                <View style={styles.actionRow}>
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#5D4037' }, styles.whiteBorder]}>
+                    <Text style={{fontSize: 20}}>🌽</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#4E342E' }, styles.whiteBorder]}>
+                    <Text style={{fontSize: 20}}>🥜</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#6D4C41' }, styles.whiteBorder]}>
+                    <Text style={{fontSize: 20}}>🪠</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={[styles.progressTrack, { backgroundColor: 'rgba(255,255,255,0.3)' }]}>
+                  <View style={[styles.progressFill, { width: `${progressPct}%`, backgroundColor: '#FFF' }]} />
+                </View>
+                <Text style={[styles.progressText, styles.whiteText]}>{currentXP.toLocaleString()} XP • {nextLevelXP - currentXP} to next stage</Text>
               </View>
+
+              {/* WIDGET 4: 2x1 Medium Recent Feed */}
+              <View style={[styles.widget2x1, styles.shadowSoft, styles.whiteBorder, { backgroundColor: '#3E2723' }]}>
+                <Text style={styles.widgetTitle}>Recent Logs 💩</Text>
+                
+                <View style={styles.feedList}>
+                  {feedItems.slice(0, 2).map((item) => (
+                    <View key={item.id} style={[styles.feedMiniCard]}>
+                      <View style={styles.feedAvatar}>
+                        <Text style={styles.feedAvatarText}>{item.userHandle.charAt(0).toUpperCase()}</Text>
+                      </View>
+                      <View style={styles.feedMiniInfo}>
+                        <Text style={styles.feedUserName}>{item.userHandle}</Text>
+                        <Text style={styles.feedTime}>{formatTimeAgo(item.createdAt)}</Text>
+                      </View>
+                      <Text style={{fontSize: 18}}>💨</Text>
+                    </View>
+                  ))}
+                  {feedItems.length === 0 && (
+                     <Text style={styles.emptySub}>No recent activity</Text>
+                  )}
+                </View>
+              </View>
+
             </View>
 
-            <View style={styles.profileXpSection}>
-              <View style={styles.profileXpRow}>
-                <Text style={styles.profileXpTitle}>XP Progress</Text>
-                <Text style={styles.profileXpVal}>{currentXP.toLocaleString()} / {nextLevelXP.toLocaleString()} XP</Text>
-              </View>
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
-              </View>
-            </View>
-
-            <View style={styles.profileStatsFooter}>
-              <View style={styles.profileStatItem}>
-                <Text style={styles.profileStatValue}>{todayCount}</Text>
-                <Text style={styles.profileStatLabel}>Today's Contribution</Text>
-              </View>
-              <View style={styles.profileDivider} />
-              <View style={styles.profileStatItem}>
-                <Text style={styles.profileStatValue}>{totalLoggedCount > 0 ? '#1' : '-'}</Text>
-                <Text style={styles.profileStatLabel}>Weekly Rank</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Extra padding for floating bottom bar */}
-          <View style={{ height: 90 }} />
+          <View style={{ height: 100 }} />
         </ScrollView>
       </SafeAreaView>
-
-      {/* NOTIFICATION MODAL */}
-      <Modal
-        visible={notificationVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setNotificationVisible(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setNotificationVisible(false)}
-        >
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Notifications 🔔</Text>
-              <TouchableOpacity onPress={() => setNotificationVisible(false)}>
-                <Text style={styles.modalClose}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.noNotificationsText}>No new notifications right now.</Text>
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
-      {/* ACHIEVEMENT DETAIL MODAL */}
-      <Modal
-        visible={!!selectedAchievement}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setSelectedAchievement(null)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setSelectedAchievement(null)}
-        >
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Achievement Status 🏆</Text>
-              <TouchableOpacity onPress={() => setSelectedAchievement(null)}>
-                <Text style={styles.modalClose}>✕</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.achievementModalText}>{selectedAchievement}</Text>
-          </View>
-        </TouchableOpacity>
-      </Modal>
-    </View>
+    </LinearGradient>
   );
 }
 
+// ============================================
+// iOS WIDGET GRID STYLES
+// ============================================
 const styles = StyleSheet.create({
   screenOuter: {
     flex: 1,
-    backgroundColor: DESIGN_COLORS.background,
   },
   container: {
     flex: 1,
+    width: '100%',
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 16,
-    gap: 24,
+    paddingBottom: 40,
+    gap: 20,
   },
 
-  // HEADER
-  headerRow: {
+  // FLOATING HEADER
+  floatingHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    marginTop: 10,
+    marginBottom: 20,
+    paddingHorizontal: 4,
   },
-  headerTitleGroup: {
-    gap: 2,
+  floatingTitleGroup: {
+    flex: 1,
   },
   appTitle: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: DESIGN_COLORS.textPrimary,
-    letterSpacing: -0.8,
+    fontSize: 26,
+    fontFamily: 'Nunito-ExtraBold',
+    color: '#EFEBE9',
   },
   appSubtitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: DESIGN_COLORS.textSecondary,
+    fontSize: 15,
+    fontFamily: 'Nunito-ExtraBold',
+    color: '#BCAAA4',
+    opacity: 0.8,
+    marginTop: 2,
   },
-  bellButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: DESIGN_COLORS.card,
-    borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-    alignItems: 'center',
+  floatingProfileBtn: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-      },
-      android: { elevation: 2 },
-      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
-    }),
-  },
-  bellIcon: {
-    fontSize: 20,
-  },
-  bellDot: {
-    position: 'absolute',
-    top: 10,
-    right: 11,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: DESIGN_COLORS.primary,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 4,
   },
 
-  // STAT CARDS
-  statsContainer: {
+  // WIDGET GRID
+  widgetGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    justifyContent: 'space-between',
+    gap: 16,
   },
-  statCard: {
-    flex: 1,
-    minWidth: 150,
-    backgroundColor: DESIGN_COLORS.card,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
+  
+  whiteBorder: {
+    borderWidth: 4,
+    borderColor: 'rgba(93, 64, 55, 0.5)',
+  },
+  whiteText: {
+    color: '#EFEBE9',
+  },
+  
+  // 1x1 SQUARE WIDGET
+  widget1x1: {
+    width: '47%',
+    aspectRatio: 1, // Make it a perfect square
+    borderRadius: 36, // Massive squishy corners
     padding: 16,
-    gap: 8,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-      },
-      android: { elevation: 2 },
-      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
-    }),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  fullWidthStatCard: {
-    minWidth: '100%',
+  widgetBrown: {
+    backgroundColor: '#4E342E', // Solid brown
+  },
+  widgetOlive: {
+    backgroundColor: '#556B2F', // Solid olive green
+  },
+  
+  // 2x1 WIDGET
+  widget2x1: {
+    width: '100%',
+    borderRadius: 36,
+    padding: 32,
+  },
+  // 2x2 WIDGET
+  widget2x2: {
+    width: '100%',
+    aspectRatio: 1, // 2x2 perfect square
+    borderRadius: 36,
+    padding: 32,
+  },
+
+  // WIDGET TYPOGRAPHY
+  widgetEmoji: {
+    fontSize: 54,
+    marginBottom: 8,
+  },
+  widgetNumber: {
+    fontSize: 36,
+    fontFamily: 'Nunito-ExtraBold',
+    textAlign: 'center',
+  },
+  widgetLabel: {
+    fontSize: 15,
+    fontFamily: 'Nunito-ExtraBold',
+    textAlign: 'center',
     marginTop: 4,
   },
-  statHeaderRow: {
+
+  // PET CENTERPIECE
+  levelWidgetHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 12,
   },
-  statLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: DESIGN_COLORS.textSecondary,
-  },
-  statEmoji: {
-    fontSize: 18,
-  },
-  statNumber: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: DESIGN_COLORS.textPrimary,
-    letterSpacing: -0.5,
-  },
-  statValueHighlight: {
+  widgetTitle: {
     fontSize: 20,
-    fontWeight: '800',
-    color: DESIGN_COLORS.primary,
-    letterSpacing: -0.3,
+    fontFamily: 'Nunito-ExtraBold',
+    color: '#EFEBE9',
   },
-  statSubtext: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: DESIGN_COLORS.textSecondary,
+  levelPill: {
+    backgroundColor: '#5D4037', 
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
-  statScoreBadge: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: DESIGN_COLORS.primary,
-    backgroundColor: '#F7F2EE',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
+  levelPillText: {
+    fontSize: 14,
+    fontFamily: 'Nunito-ExtraBold',
+    color: '#EFEBE9', // match bg
+  },
+  petContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  petEmoji: {
+    fontSize: 140, 
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 0, height: 10 },
+    textShadowRadius: 10,
+  },
+  
+  // INTERACTIVE ACTIONS
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    gap: 16,
+    marginBottom: 32,
+  },
+  actionBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
   },
 
-  // PROGRESS BAR
-  progressContainer: {
-    marginTop: 4,
-    gap: 6,
-  },
+  // PROGRESS
   progressTrack: {
-    height: 8,
-    backgroundColor: DESIGN_COLORS.border,
-    borderRadius: 4,
+    height: 14,
+    borderRadius: 7,
     overflow: 'hidden',
+    marginBottom: 8,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: DESIGN_COLORS.primary,
-    borderRadius: 4,
+    borderRadius: 7,
   },
   progressText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: DESIGN_COLORS.textSecondary,
-  },
-
-  // SECTION CARD COMMON
-  cardSection: {
-    backgroundColor: DESIGN_COLORS.card,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-    padding: 20,
-    gap: 16,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-      },
-      android: { elevation: 2 },
-      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
-    }),
-  },
-  cardHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sectionCardTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: DESIGN_COLORS.textPrimary,
-    letterSpacing: -0.3,
-  },
-  activePill: {
-    backgroundColor: '#F7F7F5',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  activePillText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: DESIGN_COLORS.textSecondary,
-  },
-
-  // LEADERBOARD
-  leaderboardList: {
-    gap: 12,
-  },
-  leaderboardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: DESIGN_COLORS.border,
-    gap: 12,
-  },
-  noBorderRow: {
-    borderBottomWidth: 0,
-    paddingBottom: 0,
-  },
-  rankBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  goldBadge: {
-    backgroundColor: '#FFF8E1',
-  },
-  silverBadge: {
-    backgroundColor: '#F1F3F4',
-  },
-  bronzeBadge: {
-    backgroundColor: '#FCE8E6',
-  },
-  neutralBadge: {
-    backgroundColor: '#F7F7F5',
-  },
-  rankBadgeText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  medalText: {
-    fontSize: 14,
-  },
-  neutralRankText: {
     fontSize: 13,
-    color: DESIGN_COLORS.textSecondary,
+    fontFamily: 'Nunito-ExtraBold',
+    textAlign: 'center',
   },
-  avatarCircle: {
+
+  // MINI FEED LIST (Inside Widget)
+  feedList: {
+    marginTop: 16,
+    gap: 12,
+  },
+  feedMiniCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4E342E',
+    padding: 12,
+    borderRadius: 20,
+  },
+  feedAvatar: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#EFEBE9',
-    borderWidth: 1,
-    borderColor: '#D7CCC8',
-    alignItems: 'center',
+    backgroundColor: '#5D4037',
     justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
-  avatarInitials: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: DESIGN_COLORS.primary,
+  feedAvatarText: {
+    fontSize: 14,
+    fontFamily: 'Nunito-ExtraBold',
+    color: '#EFEBE9',
   },
-  userInfoCol: {
+  feedMiniInfo: {
     flex: 1,
   },
-  usernameText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: DESIGN_COLORS.textPrimary,
-  },
-  userTitleText: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: DESIGN_COLORS.textSecondary,
-    marginTop: 1,
-  },
-  xpCol: {
-    alignItems: 'flex-end',
-  },
-  xpNumberText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: DESIGN_COLORS.primary,
-  },
-  fullLeaderboardBtn: {
-    backgroundColor: '#F7F7F5',
-    borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-    borderRadius: 14,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  fullLeaderboardBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: DESIGN_COLORS.primary,
-  },
-  emptyLeaderboardBox: {
-    paddingVertical: 16,
-    alignItems: 'center',
-    gap: 4,
-  },
-  emptyLeaderboardText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: DESIGN_COLORS.textPrimary,
-  },
-  emptyLeaderboardSub: {
-    fontSize: 12,
-    color: DESIGN_COLORS.textSecondary,
-  },
-
-  // RECENT REPORTS SECTION
-  sectionContainer: {
-    gap: 14,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: DESIGN_COLORS.textPrimary,
-    letterSpacing: -0.4,
-  },
-  seeAllText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: DESIGN_COLORS.primary,
-  },
-  reportsStack: {
-    gap: 12,
-  },
-  reportCard: {
-    backgroundColor: DESIGN_COLORS.card,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-    padding: 16,
-    gap: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-      },
-      android: { elevation: 2 },
-      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
-    }),
-  },
-  emptyReportCard: {
-    backgroundColor: DESIGN_COLORS.card,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-    padding: 24,
-    alignItems: 'center',
-    gap: 6,
-  },
-  emptyReportEmoji: {
-    fontSize: 32,
-  },
-  emptyReportTitle: {
+  feedUserName: {
     fontSize: 15,
-    fontWeight: '700',
-    color: DESIGN_COLORS.textPrimary,
+    fontFamily: 'Nunito-ExtraBold',
+    color: '#EFEBE9',
   },
-  emptyReportSub: {
-    fontSize: 12,
-    color: DESIGN_COLORS.textSecondary,
+  feedTime: {
+    fontSize: 13,
+    fontFamily: 'Nunito-ExtraBold',
+    color: '#BCAAA4',
+  },
+  emptySub: {
+    fontSize: 14,
+    fontFamily: 'Nunito-ExtraBold',
+    color: '#8A7F75',
     textAlign: 'center',
-  },
-  reportHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  reportIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#F7F2EE',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  reportPoopIcon: {
-    fontSize: 22,
-  },
-  reportMainInfo: {
-    flex: 1,
-    gap: 4,
-  },
-  reportTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  reportLocationText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: DESIGN_COLORS.textPrimary,
-  },
-  sizeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  sizeBadgeText: {
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  reportMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  verificationBadge: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: DESIGN_COLORS.success,
-  },
-  metaDot: {
-    fontSize: 12,
-    color: DESIGN_COLORS.border,
-  },
-  reportTimeText: {
-    fontSize: 12,
-    color: DESIGN_COLORS.textSecondary,
-  },
-  reportFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: DESIGN_COLORS.border,
-  },
-  reactionCountText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: DESIGN_COLORS.textSecondary,
-  },
-  upvoteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#F7F7F5',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-  },
-  upvoteBtnActive: {
-    backgroundColor: '#F7F2EE',
-    borderColor: DESIGN_COLORS.primary,
-  },
-  upvoteIcon: {
-    fontSize: 12,
-  },
-  upvoteLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: DESIGN_COLORS.textSecondary,
-  },
-  upvoteLabelActive: {
-    color: DESIGN_COLORS.primary,
+    padding: 16,
   },
 
-  // ACHIEVEMENTS
-  achievementsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+  // SHADOWS (TINTED)
+  shadowSoft: {
+    shadowColor: '#1A0E0B',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.8,
+    shadowRadius: 25,
+    elevation: 4,
   },
-  achievementItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '48%',
-    backgroundColor: '#F7F7F5',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-    padding: 12,
-    gap: 10,
+  shadowBrown: {
+    shadowColor: '#1A0E0B',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.8,
+    shadowRadius: 25,
+    elevation: 6,
   },
-  achievementEmoji: {
-    fontSize: 22,
-  },
-  achievementName: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: DESIGN_COLORS.textPrimary,
-  },
-  achievementSub: {
-    fontSize: 10,
-    fontWeight: '500',
-    color: DESIGN_COLORS.textSecondary,
-    marginTop: 1,
-  },
-  achievementModalText: {
-    fontSize: 14,
-    color: DESIGN_COLORS.textPrimary,
-    lineHeight: 20,
-    marginTop: 8,
-  },
-
-  // PROFILE PREVIEW
-  profileHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  profileAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: DESIGN_COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  profileAvatarText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  profileMetaGroup: {
-    flex: 1,
-    gap: 2,
-  },
-  profileNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  profileName: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: DESIGN_COLORS.textPrimary,
-  },
-  profileLevelPill: {
-    backgroundColor: '#F7F2EE',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  profileLevelText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: DESIGN_COLORS.primary,
-  },
-  profileHandle: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: DESIGN_COLORS.textSecondary,
-  },
-  profileXpSection: {
-    gap: 6,
-    marginTop: 4,
-  },
-  profileXpRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  profileXpTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: DESIGN_COLORS.textSecondary,
-  },
-  profileXpVal: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: DESIGN_COLORS.primary,
-  },
-  profileStatsFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#F7F7F5',
-    borderRadius: 14,
-    paddingVertical: 10,
-    marginTop: 4,
-  },
-  profileStatItem: {
-    alignItems: 'center',
-    gap: 2,
-  },
-  profileStatValue: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: DESIGN_COLORS.textPrimary,
-  },
-  profileStatLabel: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: DESIGN_COLORS.textSecondary,
-  },
-  profileDivider: {
-    width: 1,
-    height: '100%',
-    backgroundColor: DESIGN_COLORS.border,
-  },
-
-  // MODAL
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  modalCard: {
-    backgroundColor: DESIGN_COLORS.card,
-    borderRadius: 24,
-    padding: 20,
-    gap: 16,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: DESIGN_COLORS.textPrimary,
-  },
-  modalClose: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: DESIGN_COLORS.textSecondary,
-    padding: 4,
-  },
-  noNotificationsText: {
-    fontSize: 13,
-    color: DESIGN_COLORS.textSecondary,
-    paddingVertical: 8,
-  },
+  shadowOlive: {
+    shadowColor: '#1A0E0B',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.8,
+    shadowRadius: 25,
+    elevation: 6,
+  }
 });

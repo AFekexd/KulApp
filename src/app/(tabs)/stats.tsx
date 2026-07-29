@@ -8,15 +8,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLeaderboardStore, LeaderboardUser } from '@/stores/leaderboardStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useDropStore } from '@/stores/dropStore';
+import { Trophy, Crown, Medal } from 'lucide-react-native';
 
 const DESIGN_COLORS = {
-  background: '#F7F7F5',
-  card: '#FFFFFF',
-  primary: '#7C4D2E',
-  secondary: '#C89A5A',
-  textPrimary: '#1B1B1B',
-  textSecondary: '#6B6B6B',
-  border: '#ECECEC',
+  background: '#2D1B15',
+  card: '#3E2723',
+  primary: '#A95C33', // Replaced with bronze for highlights
+  secondary: '#8D6E63', // taupe/mud
+  textPrimary: '#EFEBE9',
+  textSecondary: '#BCAAA4',
+  border: '#5D4037',
 };
 
 export default function LeaderboardScreen() {
@@ -66,7 +67,10 @@ export default function LeaderboardScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Title */}
           <View style={styles.headerGroup}>
-            <Text style={styles.title}>Leaderboard 🏆</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={styles.title}>Leaderboard</Text>
+              <Trophy size={28} color={DESIGN_COLORS.primary} />
+            </View>
             <Text style={styles.subtitle}>Community rankings and top poopers</Text>
           </View>
 
@@ -90,7 +94,7 @@ export default function LeaderboardScreen() {
             {/* Rank 2 */}
             {secondUser && (
               <View style={[styles.podiumCard, styles.podiumSecond]}>
-                <Text style={styles.podiumMedal}>🥈</Text>
+                <Medal size={24} color="#A0A0A0" />
                 <View style={styles.podiumAvatar}>
                   <Text style={styles.podiumAvatarText}>
                     {secondUser.username.slice(0, 2).toUpperCase()}
@@ -104,14 +108,14 @@ export default function LeaderboardScreen() {
             {/* Rank 1 */}
             {firstUser && (
               <View style={[styles.podiumCard, styles.podiumFirst]}>
-                <Text style={styles.podiumMedal}>🥇</Text>
+                <Crown size={24} color={DESIGN_COLORS.secondary} />
                 <View style={[styles.podiumAvatar, styles.firstAvatar]}>
-                  <Text style={[styles.podiumAvatarText, { color: '#FFF' }]}>
+                  <Text style={[styles.podiumAvatarText, { color: '#2D1B15' }]}>
                     {firstUser.username.slice(0, 2).toUpperCase()}
                   </Text>
                 </View>
                 <Text style={styles.podiumName} numberOfLines={1}>{firstUser.username}</Text>
-                <Text style={[styles.podiumScore, { color: DESIGN_COLORS.primary, fontWeight: '800' }]}>
+                <Text style={[styles.podiumScore, { color: DESIGN_COLORS.primary, fontFamily: 'Inter-Bold' }]}>
                   {firstUser.points.toLocaleString()} XP
                 </Text>
               </View>
@@ -120,7 +124,7 @@ export default function LeaderboardScreen() {
             {/* Rank 3 */}
             {thirdUser && (
               <View style={[styles.podiumCard, styles.podiumThird]}>
-                <Text style={styles.podiumMedal}>🥉</Text>
+                <Medal size={24} color="#CD7F32" />
                 <View style={styles.podiumAvatar}>
                   <Text style={styles.podiumAvatarText}>
                     {thirdUser.username.slice(0, 2).toUpperCase()}
@@ -147,9 +151,19 @@ export default function LeaderboardScreen() {
                     idx === rankedUsers.length - 1 && styles.noBorder
                   ]}
                 >
-                  <Text style={styles.rankNum}>{user.badge}</Text>
+                  <View style={{ width: 24, alignItems: 'center' }}>
+                    {user.rank === 1 ? (
+                      <Crown size={16} color={DESIGN_COLORS.secondary} />
+                    ) : user.rank === 2 ? (
+                      <Medal size={16} color="#A0A0A0" />
+                    ) : user.rank === 3 ? (
+                      <Medal size={16} color="#CD7F32" />
+                    ) : (
+                      <Text style={styles.rankNum}>{user.rank}</Text>
+                    )}
+                  </View>
                   <View style={[styles.rowAvatar, isMe && styles.myAvatar]}>
-                    <Text style={[styles.rowAvatarText, isMe && { color: '#FFF' }]}>
+                    <Text style={[styles.rowAvatarText, isMe && { color: '#2D1B15' }]}>
                       {user.username.slice(0, 2).toUpperCase()}
                     </Text>
                   </View>
@@ -188,11 +202,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     color: DESIGN_COLORS.textPrimary,
   },
   subtitle: {
     fontSize: 14,
+    fontFamily: 'Inter-Regular',
     color: DESIGN_COLORS.textSecondary,
   },
   filterRow: {
@@ -214,12 +229,12 @@ const styles = StyleSheet.create({
   },
   filterText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: DESIGN_COLORS.textSecondary,
   },
   filterTextActive: {
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
   },
   podiumContainer: {
     flexDirection: 'row',
@@ -256,7 +271,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#EFEBE9',
+    backgroundColor: '#4E342E',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -265,17 +280,17 @@ const styles = StyleSheet.create({
   },
   podiumAvatarText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.primary,
   },
   podiumName: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textPrimary,
   },
   podiumScore: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: DESIGN_COLORS.textSecondary,
   },
   listCard: {
@@ -288,7 +303,7 @@ const styles = StyleSheet.create({
   },
   listCardTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     color: DESIGN_COLORS.textPrimary,
   },
   rankRow: {
@@ -300,7 +315,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   myRankRow: {
-    backgroundColor: '#F7F2EE',
+    backgroundColor: '#4E342E',
     borderRadius: 12,
     paddingHorizontal: 8,
     marginHorizontal: -8,
@@ -310,7 +325,7 @@ const styles = StyleSheet.create({
   },
   rankNum: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     width: 24,
     textAlign: 'center',
   },
@@ -318,7 +333,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F7F7F5',
+    backgroundColor: '#4E342E',
     borderWidth: 1,
     borderColor: DESIGN_COLORS.border,
     alignItems: 'center',
@@ -330,7 +345,7 @@ const styles = StyleSheet.create({
   },
   rowAvatarText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textPrimary,
   },
   rowMeta: {
@@ -338,20 +353,21 @@ const styles = StyleSheet.create({
   },
   rowUsername: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textPrimary,
   },
   myText: {
     color: DESIGN_COLORS.primary,
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
   },
   rowTitle: {
     fontSize: 11,
+    fontFamily: 'Inter-Regular',
     color: DESIGN_COLORS.textSecondary,
   },
   rowXp: {
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.primary,
   },
 });

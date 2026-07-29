@@ -16,16 +16,17 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFeedStore, FeedItem } from '@/stores/feedStore';
+import { Search, MapPin, Globe, Users, Home, Lock, ThumbsUp, Radio } from 'lucide-react-native';
 
 const DESIGN_COLORS = {
-  background: '#F7F7F5',
-  card: '#FFFFFF',
-  primary: '#7C4D2E',
-  secondary: '#C89A5A',
-  success: '#4CAF50',
-  textPrimary: '#1B1B1B',
-  textSecondary: '#6B6B6B',
-  border: '#ECECEC',
+  background: '#2D1B15',
+  card: '#3E2723',
+  primary: '#A95C33',
+  secondary: '#8D6E63',
+  success: '#33691E',
+  textPrimary: '#EFEBE9',
+  textSecondary: '#BCAAA4',
+  border: '#5D4037',
 };
 
 const getSizeBadgeStyle = (size: string) => {
@@ -92,7 +93,10 @@ export default function FeedScreen() {
           {/* Header */}
           <View style={styles.headerRow}>
             <View>
-              <Text style={styles.title}>Recent Reports 📡</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={styles.title}>Recent Reports</Text>
+                <Radio size={24} color={DESIGN_COLORS.textPrimary} />
+              </View>
               <Text style={styles.subtitle}>Real-time community drop activity</Text>
             </View>
 
@@ -107,7 +111,7 @@ export default function FeedScreen() {
 
           {/* Search Input */}
           <View style={styles.searchBarContainer}>
-            <Text style={styles.searchIcon}>🔍</Text>
+            <Search size={16} color={DESIGN_COLORS.textSecondary} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search by location, title or user..."
@@ -130,9 +134,15 @@ export default function FeedScreen() {
                 style={[styles.filterPill, activePrivacyFilter === f && styles.filterPillActive]}
                 onPress={() => setActivePrivacyFilter(f)}
               >
-                <Text style={[styles.filterPillText, activePrivacyFilter === f && styles.filterPillTextActive]}>
-                  {f === 'all' ? '🌍 All Drops' : f === 'friends' ? '👥 Friends' : f === 'group' ? '🏘️ Group' : '🔒 Private'}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  {f === 'all' && <Globe size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
+                  {f === 'friends' && <Users size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
+                  {f === 'group' && <Home size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
+                  {f === 'private' && <Lock size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
+                  <Text style={[styles.filterPillText, activePrivacyFilter === f && styles.filterPillTextActive]}>
+                    {f === 'all' ? 'All Drops' : f === 'friends' ? 'Friends' : f === 'group' ? 'Group' : 'Private'}
+                  </Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -169,7 +179,8 @@ export default function FeedScreen() {
                       <Text style={styles.reportTitle}>{report.custom_title || `${report.location} Session`}</Text>
                       
                       <View style={styles.locationMetaRow}>
-                        <Text style={styles.locationText}>📍 {report.location}</Text>
+                        <MapPin size={13} color={DESIGN_COLORS.textSecondary} />
+                        <Text style={styles.locationText}>{report.location}</Text>
                         <Text style={styles.metaDot}>•</Text>
                         <Text style={styles.verificationBadge}>✓ Verified {report.verification_pct}%</Text>
                       </View>
@@ -186,7 +197,7 @@ export default function FeedScreen() {
                         activeOpacity={0.7}
                         onPress={() => toggleUpvote(report.id)}
                       >
-                        <Text style={styles.upvoteIcon}>👍</Text>
+                        <ThumbsUp size={12} color={report.is_upvoted ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary} />
                         <Text style={[styles.upvoteLabel, report.is_upvoted && styles.upvoteLabelActive]}>
                           {report.is_upvoted ? 'Upvoted' : 'Upvote'}
                         </Text>
@@ -197,7 +208,7 @@ export default function FeedScreen() {
               })
             ) : (
               <View style={styles.emptyCard}>
-                <Text style={styles.emptyIcon}>🔍</Text>
+                <Search size={32} color={DESIGN_COLORS.textSecondary} />
                 <Text style={styles.emptyTitle}>No reports found</Text>
                 <Text style={styles.emptySub}>Try clearing your search or filter to see more community drops.</Text>
               </View>
@@ -231,7 +242,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     color: DESIGN_COLORS.textPrimary,
   },
   subtitle: {
@@ -247,7 +258,7 @@ const styles = StyleSheet.create({
   },
   newReportBtnText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
   searchBarContainer: {
@@ -261,9 +272,6 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
     gap: 8,
   },
-  searchIcon: {
-    fontSize: 16,
-  },
   searchInput: {
     flex: 1,
     fontSize: 14,
@@ -271,7 +279,7 @@ const styles = StyleSheet.create({
   },
   clearSearchText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textSecondary,
   },
   filterPillRow: {
@@ -292,12 +300,12 @@ const styles = StyleSheet.create({
   },
   filterPillText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: DESIGN_COLORS.textSecondary,
   },
   filterPillTextActive: {
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
   },
   feedStack: {
     gap: 14,
@@ -311,13 +319,13 @@ const styles = StyleSheet.create({
     gap: 12,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: '#1A0E0B',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
+        shadowOpacity: 0.2,
         shadowRadius: 8,
       },
       android: { elevation: 2 },
-      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
+      web: { boxShadow: '0 2px 8px rgba(93,64,55,0.06)' },
     }),
   },
   cardTopRow: {
@@ -334,18 +342,18 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#EFEBE9',
+    backgroundColor: '#4E342E',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
     fontSize: 12,
-    fontWeight: '800',
-    color: DESIGN_COLORS.primary,
+    fontFamily: 'Inter-Bold',
+    color: '#EFEBE9',
   },
   username: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textPrimary,
   },
   timeAgo: {
@@ -359,14 +367,14 @@ const styles = StyleSheet.create({
   },
   sizeBadgeText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: 'Inter-Bold',
   },
   cardBody: {
     gap: 4,
   },
   reportTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     color: DESIGN_COLORS.textPrimary,
   },
   locationMetaRow: {
@@ -376,7 +384,7 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: DESIGN_COLORS.textSecondary,
   },
   metaDot: {
@@ -385,7 +393,7 @@ const styles = StyleSheet.create({
   },
   verificationBadge: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.success,
   },
   cardFooter: {
@@ -398,14 +406,14 @@ const styles = StyleSheet.create({
   },
   reactionsText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: DESIGN_COLORS.textSecondary,
   },
   upvoteBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F7F7F5',
+    backgroundColor: '#2D1B15',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 10,
@@ -413,15 +421,12 @@ const styles = StyleSheet.create({
     borderColor: DESIGN_COLORS.border,
   },
   upvoteBtnActive: {
-    backgroundColor: '#F7F2EE',
+    backgroundColor: '#4E342E',
     borderColor: DESIGN_COLORS.primary,
-  },
-  upvoteIcon: {
-    fontSize: 12,
   },
   upvoteLabel: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textSecondary,
   },
   upvoteLabelActive: {
@@ -436,12 +441,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  emptyIcon: {
-    fontSize: 32,
-  },
   emptyTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     color: DESIGN_COLORS.textPrimary,
   },
   emptySub: {
