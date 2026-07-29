@@ -1,28 +1,47 @@
 /**
  * Sign In & Sign Up Screen — PoopTracker
- * Native iOS 18 inspired - Minimal, clean, light mode.
+ * 
+ * Native iOS 18 inspired. Minimal, clean, playful, light mode.
+ * Strict 8pt spacing, soft rounded corners, flat design.
+ * No gradients, no glassmorphism, no neumorphism.
  */
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  Pressable, 
-  Alert, 
-  ScrollView, 
-  KeyboardAvoidingView, 
-  Platform 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Colors, typography, spacing, borderRadius } from '@/theme';
 import { useAuthStore } from '@/stores/authStore';
-import { Button } from '@/components/ui/Button';
+
+const C = {
+  bg: '#F7F7F5',
+  card: '#FFFFFF',
+  primary: '#7C4D2E',
+  secondary: '#C89A5A',
+  success: '#4CAF50',
+  textPrimary: '#1B1B1B',
+  textSecondary: '#6B6B6B',
+  border: '#ECECEC',
+};
 
 export default function SignInScreen() {
   const router = useRouter();
-  const { signInWithEmail, signUpWithEmail, signInWithGoogle, signInWithApple, continueAsGuest } = useAuthStore();
+  const {
+    signInWithEmail,
+    signUpWithEmail,
+    signInWithGoogle,
+    signInWithApple,
+    continueAsGuest,
+  } = useAuthStore();
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
@@ -57,8 +76,8 @@ export default function SignInScreen() {
       if (error) {
         Alert.alert('Sign Up Failed', error.message);
       } else {
-        Alert.alert('Success!', 'Account created! You can now log in.');
-        setMode('signin');
+        Alert.alert('Welcome! 💩', 'Account created. You are now signed in.');
+        router.replace('/(tabs)');
       }
     }
   };
@@ -69,133 +88,158 @@ export default function SignInScreen() {
   };
 
   return (
-    <View style={styles.outerContainer}>
-      <SafeAreaView style={styles.container}>
-        <KeyboardAvoidingView 
+    <View style={styles.screen}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.flexOne}
+          style={{ flex: 1 }}
         >
-          <ScrollView 
+          <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.iconEmoji}>💩</Text>
-              <Text style={styles.title}>PoopTracker</Text>
+            {/* ─── Brand Header ─── */}
+            <View style={styles.brandGroup}>
+              <View style={styles.logoCircle}>
+                <Text style={styles.logoEmoji}>💩</Text>
+              </View>
+              <Text style={styles.appName}>PoopTracker</Text>
               <Text style={styles.tagline}>Community poop tracking</Text>
             </View>
 
-            {/* Mode Switcher */}
-            <View style={styles.tabContainer}>
-              <Pressable 
-                style={[styles.tab, mode === 'signin' && styles.activeTab]}
+            {/* ─── Mode Toggle ─── */}
+            <View style={styles.toggleContainer}>
+              <TouchableOpacity
+                style={[styles.toggleBtn, mode === 'signin' && styles.toggleActive]}
                 onPress={() => setMode('signin')}
+                activeOpacity={0.8}
               >
-                <Text style={[styles.tabText, mode === 'signin' && styles.activeTabText]}>
+                <Text style={[styles.toggleText, mode === 'signin' && styles.toggleTextActive]}>
                   Log In
                 </Text>
-              </Pressable>
-
-              <Pressable 
-                style={[styles.tab, mode === 'signup' && styles.activeTab]}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.toggleBtn, mode === 'signup' && styles.toggleActive]}
                 onPress={() => setMode('signup')}
+                activeOpacity={0.8}
               >
-                <Text style={[styles.tabText, mode === 'signup' && styles.activeTabText]}>
+                <Text style={[styles.toggleText, mode === 'signup' && styles.toggleTextActive]}>
                   Sign Up
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
             </View>
 
-            {/* Form Fields */}
-            <View style={styles.formContainer}>
+            {/* ─── Form Card ─── */}
+            <View style={styles.formCard}>
               {mode === 'signup' && (
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Username</Text>
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.label}>Username</Text>
                   <TextInput
                     style={styles.input}
                     placeholder="e.g. PoopMaster69"
-                    placeholderTextColor={Colors.light.textMuted}
+                    placeholderTextColor={C.textSecondary}
                     value={username}
                     onChangeText={setUsername}
                     autoCapitalize="none"
+                    autoCorrect={false}
                   />
                 </View>
               )}
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Email</Text>
+              <View style={styles.fieldGroup}>
+                <Text style={styles.label}>Email</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="your.email@example.com"
-                  placeholderTextColor={Colors.light.textMuted}
+                  placeholder="your@email.com"
+                  placeholderTextColor={C.textSecondary}
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
                   keyboardType="email-address"
+                  autoCorrect={false}
                 />
               </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Password</Text>
+              <View style={styles.fieldGroup}>
+                <Text style={styles.label}>Password</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="••••••••"
-                  placeholderTextColor={Colors.light.textMuted}
+                  placeholderTextColor={C.textSecondary}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
                 />
               </View>
 
-              {/* Primary Submit Button */}
-              <Button
-                title={mode === 'signin' ? 'Log In' : 'Create Account'}
+              {/* Primary Action */}
+              <TouchableOpacity
+                style={[styles.primaryBtn, loading && styles.primaryBtnDisabled]}
+                activeOpacity={0.85}
                 onPress={handleSubmit}
-                loading={loading}
-                style={{ marginTop: spacing.md }}
-              />
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text style={styles.primaryBtnText}>
+                    {mode === 'signin' ? 'Log In' : 'Create Account'}
+                  </Text>
+                )}
+              </TouchableOpacity>
             </View>
 
-            {/* Divider */}
+            {/* ─── Divider ─── */}
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
+              <Text style={styles.dividerLabel}>or continue with</Text>
               <View style={styles.dividerLine} />
             </View>
 
-              {/* Social OAuth & Guest Buttons */}
-            <View style={styles.socialContainer}>
+            {/* ─── Social & Guest Buttons ─── */}
+            <View style={styles.socialGroup}>
               <View style={styles.socialRow}>
-                <Button
-                  title="Google"
-                  variant="secondary"
-                  style={{ flex: 1 }}
+                <TouchableOpacity
+                  style={styles.socialBtn}
+                  activeOpacity={0.8}
                   onPress={async () => {
                     setLoading(true);
                     const { error } = await signInWithGoogle();
                     setLoading(false);
-                    if (error) Alert.alert('Google Sign-In Failed', error.message);
+                    if (error) Alert.alert('Google Sign-In', error.message);
                   }}
-                  loading={loading}
-                />
-                <Button
-                  title="Apple"
-                  variant="secondary"
-                  style={{ flex: 1 }}
+                >
+                  <Text style={styles.socialIcon}>G</Text>
+                  <Text style={styles.socialLabel}>Google</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.socialBtn}
+                  activeOpacity={0.8}
                   onPress={async () => {
                     const { error } = await signInWithApple();
-                    if (error) Alert.alert('Notice', error.message);
+                    if (error) Alert.alert('Apple Sign-In', error.message);
                   }}
-                />
+                >
+                  <Text style={styles.socialIcon}></Text>
+                  <Text style={styles.socialLabel}>Apple</Text>
+                </TouchableOpacity>
               </View>
 
-              <Button
-                title="Continue as Guest"
-                variant="ghost"
+              <TouchableOpacity
+                style={styles.guestBtn}
+                activeOpacity={0.8}
                 onPress={handleGuest}
-              />
+              >
+                <Text style={styles.guestBtnText}>Continue as Guest</Text>
+              </TouchableOpacity>
             </View>
+
+            {/* ─── Footer ─── */}
+            <Text style={styles.footer}>
+              By continuing you agree to our Terms of Service & Privacy Policy.
+            </Text>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -204,120 +248,235 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  outerContainer: {
+  screen: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: C.bg,
   },
-  container: {
-    flex: 1,
-  },
-  flexOne: {
+  safe: {
     flex: 1,
   },
   scrollContent: {
-    padding: spacing.xl,
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    paddingBottom: 32,
     justifyContent: 'center',
     minHeight: '100%',
   },
-  header: {
+
+  /* ── Brand Header ── */
+  brandGroup: {
     alignItems: 'center',
-    marginBottom: spacing.xxl,
+    marginBottom: 40,
+    gap: 4,
   },
-  iconEmoji: {
-    fontSize: 64,
-    marginBottom: spacing.sm,
-  },
-  title: {
-    ...typography.heading1,
-    color: Colors.accent.primary,
-    fontWeight: '900',
-    letterSpacing: -0.5,
-  },
-  tagline: {
-    ...typography.body,
-    color: Colors.light.textSecondary,
-    marginTop: spacing.xs,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: Colors.light.borderLight,
-    borderRadius: borderRadius.md,
-    padding: 4,
-    marginBottom: spacing.xl,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: spacing.md,
+  logoCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#F7F2EE',
     alignItems: 'center',
-    borderRadius: borderRadius.sm,
-  },
-  activeTab: {
-    backgroundColor: Colors.light.surface,
+    justifyContent: 'center',
+    marginBottom: 12,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
       },
-      android: {
-        elevation: 1,
-      },
-      web: {
-        boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
-      },
+      android: { elevation: 2 },
+      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.06)' },
     }),
   },
-  tabText: {
-    ...typography.bodySmall,
-    color: Colors.light.textSecondary,
-    fontWeight: '600',
+  logoEmoji: {
+    fontSize: 42,
   },
-  activeTabText: {
-    color: Colors.light.text,
+  appName: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: C.textPrimary,
+    letterSpacing: -1,
+  },
+  tagline: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: C.textSecondary,
+  },
+
+  /* ── Mode Toggle ── */
+  toggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: C.card,
+    borderRadius: 16,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: C.border,
+    marginBottom: 24,
+  },
+  toggleBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 12,
+  },
+  toggleActive: {
+    backgroundColor: C.primary,
+  },
+  toggleText: {
+    fontSize: 14,
     fontWeight: '700',
+    color: C.textSecondary,
   },
-  formContainer: {
-    gap: spacing.lg,
-    marginBottom: spacing.xl,
+  toggleTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
   },
-  inputGroup: {
-    gap: 8,
+
+  /* ── Form Card ── */
+  formCard: {
+    backgroundColor: C.card,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: C.border,
+    padding: 24,
+    gap: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: { elevation: 2 },
+      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
+    }),
   },
-  inputLabel: {
-    ...typography.label,
+  fieldGroup: {
+    gap: 6,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: C.textPrimary,
     marginLeft: 4,
   },
   input: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: C.bg,
     borderWidth: 1,
-    borderColor: Colors.light.border,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.lg,
-    color: Colors.light.text,
-    fontSize: 16,
+    borderColor: C.border,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: C.textPrimary,
   },
+  primaryBtn: {
+    backgroundColor: C.primary,
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: C.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+      },
+      android: { elevation: 4 },
+      web: { boxShadow: '0 4px 8px rgba(124, 77, 46, 0.25)' },
+    }),
+  },
+  primaryBtnDisabled: {
+    opacity: 0.6,
+  },
+  primaryBtnText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+
+  /* ── Divider ── */
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    marginVertical: spacing.lg,
+    marginVertical: 24,
+    gap: 12,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.light.border,
+    backgroundColor: C.border,
   },
-  dividerText: {
-    ...typography.caption,
-    color: Colors.light.textMuted,
+  dividerLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: C.textSecondary,
   },
-  socialContainer: {
-    gap: spacing.md,
+
+  /* ── Social & Guest ── */
+  socialGroup: {
+    gap: 12,
   },
   socialRow: {
     flexDirection: 'row',
-    gap: spacing.md,
+    gap: 12,
+  },
+  socialBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: C.card,
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: 16,
+    paddingVertical: 14,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+      },
+      android: { elevation: 1 },
+      web: { boxShadow: '0 1px 4px rgba(0,0,0,0.04)' },
+    }),
+  },
+  socialIcon: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: C.textPrimary,
+  },
+  socialLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: C.textPrimary,
+  },
+  guestBtn: {
+    backgroundColor: '#F7F2EE',
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  guestBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: C.primary,
+  },
+
+  /* ── Footer ── */
+  footer: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: C.textSecondary,
+    textAlign: 'center',
+    marginTop: 24,
+    lineHeight: 16,
   },
 });

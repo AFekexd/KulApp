@@ -166,11 +166,11 @@ export default function HomeScreen() {
                   {feedItems.slice(0, 2).map((item) => (
                     <View key={item.id} style={[styles.feedMiniCard]}>
                       <View style={styles.feedAvatar}>
-                        <Text style={styles.feedAvatarText}>{item.userHandle.charAt(0).toUpperCase()}</Text>
+                        <Text style={styles.feedAvatarText}>{item.profiles.username.charAt(0).toUpperCase()}</Text>
                       </View>
                       <View style={styles.feedMiniInfo}>
-                        <Text style={styles.feedUserName}>{item.userHandle}</Text>
-                        <Text style={styles.feedTime}>{formatTimeAgo(item.createdAt)}</Text>
+                        <Text style={styles.feedUserName}>{item.profiles.username}</Text>
+                        <Text style={styles.feedTime}>{formatTimeAgo(item.created_at)}</Text>
                       </View>
                       <Text style={{fontSize: 18}}>💨</Text>
                     </View>
@@ -239,11 +239,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 16,
+      },
+      android: { elevation: 4 },
+      web: { boxShadow: '0 8px 16px rgba(0,0,0,0.15)' },
+    }),
   },
 
   // WIDGET GRID
@@ -339,9 +344,14 @@ const styles = StyleSheet.create({
   },
   petEmoji: {
     fontSize: 140, 
-    textShadowColor: 'rgba(0,0,0,0.1)',
-    textShadowOffset: { width: 0, height: 10 },
-    textShadowRadius: 10,
+    ...Platform.select({
+      ios: {
+        textShadowColor: 'rgba(0,0,0,0.1)',
+        textShadowOffset: { width: 0, height: 10 },
+        textShadowRadius: 10,
+      },
+      web: { textShadow: '0px 10px 10px rgba(0,0,0,0.1)' },
+    }),
   },
   
   // INTERACTIVE ACTIONS
@@ -425,24 +435,39 @@ const styles = StyleSheet.create({
 
   // SHADOWS (TINTED)
   shadowSoft: {
-    shadowColor: '#1A0E0B',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.8,
-    shadowRadius: 25,
-    elevation: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1A0E0B',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.8,
+        shadowRadius: 25,
+      },
+      android: { elevation: 4 },
+      web: { boxShadow: '0 10px 25px rgba(26,14,11,0.8)' },
+    }),
   },
   shadowBrown: {
-    shadowColor: '#1A0E0B',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.8,
-    shadowRadius: 25,
-    elevation: 6,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1A0E0B',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.8,
+        shadowRadius: 25,
+      },
+      android: { elevation: 6 },
+      web: { boxShadow: '0 10px 25px rgba(26,14,11,0.8)' },
+    }),
   },
   shadowOlive: {
-    shadowColor: '#1A0E0B',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.8,
-    shadowRadius: 25,
-    elevation: 6,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1A0E0B',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.8,
+        shadowRadius: 25,
+      },
+      android: { elevation: 6 },
+      web: { boxShadow: '0 10px 25px rgba(26,14,11,0.8)' },
+    }),
   }
 });

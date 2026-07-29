@@ -1,16 +1,15 @@
 /**
- * Auth Layout
- * Navigation layout for authentication screens.
+ * Auth Layout — PoopTracker
+ * Light mode, #F7F7F5 background.
  */
 import { Stack } from 'expo-router';
-import { Colors } from '@/theme';
 
 export default function AuthLayout() {
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: Colors.dark.background },
+        contentStyle: { backgroundColor: '#F7F7F5' },
       }}
     />
   );

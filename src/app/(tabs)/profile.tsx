@@ -1,6 +1,7 @@
 /**
  * Profile Screen — PoopTracker
- * Native iOS 18 style settings, stats summary, Friends & Groups management, and account preferences.
+ * Native iOS 18 style. Light mode. Stats summary, profile editing, preferences, account.
+ * Social / Friends & Groups are on their own dedicated tab.
  */
 import React, { useState } from 'react';
 import {
@@ -17,45 +18,35 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDropStore } from '@/stores/dropStore';
 import { useAuthStore } from '@/stores/authStore';
-import { useFriendshipStore } from '@/stores/friendshipStore';
-import { useGroupStore } from '@/stores/groupStore';
-import { User, Pencil, Flame, Users, Home, Ghost, Package } from 'lucide-react-native';
+import { Pencil, Flame, Ghost, Package, LogOut, ChevronRight } from 'lucide-react-native';
 
-const DESIGN_COLORS = {
-  background: '#2D1B15',
-  card: '#3E2723',
-  primary: '#8D6E63',
-  secondary: '#A95C33',
+const C = {
+  bg: '#F7F7F5',
+  card: '#FFFFFF',
+  primary: '#7C4D2E',
+  secondary: '#C89A5A',
   accent: '#A95C33',
-  accentSurface: '#4E342E',
-  primarySurface: '#4E342E',
-  success: '#33691E',
-  textPrimary: '#EFEBE9',
-  textSecondary: '#BCAAA4',
-  border: '#5D4037',
+  success: '#4CAF50',
+  danger: '#D32F2F',
+  textPrimary: '#1B1B1B',
+  textSecondary: '#6B6B6B',
+  textMuted: '#9E9E9E',
+  border: '#ECECEC',
+  warmSurface: '#F7F2EE',
 };
 
 export default function ProfileScreen() {
   const { drops, currentStreak } = useDropStore();
   const { profile, updateProfile, signOut } = useAuthStore();
-  const { friends, sendFriendRequest, removeFriend } = useFriendshipStore();
-  const { groups, createGroup, joinGroup } = useGroupStore();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(profile?.display_name || profile?.username || 'User');
   const [editUsername, setEditUsername] = useState(profile?.username || 'user');
 
-  // Friends & Groups inputs
-  const [socialTab, setSocialTab] = useState<'friends' | 'groups'>('friends');
-  const [friendSearchInput, setFriendSearchInput] = useState('');
-  const [newGroupNameInput, setNewGroupNameInput] = useState('');
-  const [joinInviteCodeInput, setJoinInviteCodeInput] = useState('');
-
   // Preference switches
   const [privacy, setPrivacy] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [haptics, setHaptics] = useState(true);
-  const [sound, setSound] = useState(true);
   const [stealthMode, setStealthMode] = useState(false);
 
   const totalDrops = drops.length;
@@ -76,90 +67,51 @@ export default function ProfileScreen() {
     Alert.alert('Profile Saved! 💾', 'Your profile details have been updated.');
   };
 
-  const handleAddFriend = async () => {
-    if (!friendSearchInput.trim()) {
-      Alert.alert('Empty Username', 'Please enter a username to add as friend.');
-      return;
-    }
-
-    const { error } = await sendFriendRequest(friendSearchInput);
-    if (!error) {
-      Alert.alert('Friend Request Sent! 👥', `Added ${friendSearchInput.trim()} to your friends.`);
-      setFriendSearchInput('');
-    } else {
-      Alert.alert('Error', error.message);
-    }
-  };
-
-  const handleCreateGroup = async () => {
-    if (!newGroupNameInput.trim()) {
-      Alert.alert('Group Name Required', 'Please enter a name for your group.');
-      return;
-    }
-
-    const { group, error } = await createGroup(newGroupNameInput.trim());
-    if (!error && group) {
-      Alert.alert('Group Created! 🏘️', `Group "${group.name}" created! Invite code: ${group.invite_code}`);
-      setNewGroupNameInput('');
-    } else {
-      Alert.alert('Error', error?.message || 'Failed creating group');
-    }
-  };
-
-  const handleJoinGroup = async () => {
-    if (!joinInviteCodeInput.trim()) {
-      Alert.alert('Invite Code Required', 'Please enter a 6-character group invite code.');
-      return;
-    }
-
-    const { error } = await joinGroup(joinInviteCodeInput.trim());
-    if (!error) {
-      Alert.alert('Joined Group! 🏘️', 'You have successfully joined the group.');
-      setJoinInviteCodeInput('');
-    } else {
-      Alert.alert('Join Error', error?.message || 'Invalid invite code');
-    }
-  };
-
   return (
-    <View style={styles.screenOuter}>
-      <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.screen}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Title */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={styles.title}>Profile & Settings</Text>
-            <User size={28} color={DESIGN_COLORS.textPrimary} />
-          </View>
+          {/* ─── Header ─── */}
+          <Text style={styles.headerTitle}>Profile</Text>
 
-          {/* User Banner Card */}
+          {/* ─── User Card ─── */}
           <View style={styles.userCard}>
             <View style={styles.avatarLarge}>
               <Text style={styles.avatarText}>{userInitials}</Text>
             </View>
 
-            <View style={styles.userMetaCol}>
+            <View style={styles.userMeta}>
               {!isEditing ? (
                 <>
-                  <View style={styles.userNameRow}>
-                    <Text style={styles.userName}>{profile?.display_name || profile?.username || 'User'}</Text>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.userName}>
+                      {profile?.display_name || profile?.username || 'User'}
+                    </Text>
                     <View style={styles.levelPill}>
-                      <Text style={styles.levelPillText}>Level {profile?.current_level || 1}</Text>
+                      <Text style={styles.levelPillText}>
+                        Lvl {profile?.current_level || 1}
+                      </Text>
                     </View>
                   </View>
                   <Text style={styles.userHandle}>@{profile?.username || 'user'}</Text>
-                  <TouchableOpacity onPress={() => setIsEditing(true)} style={[styles.editBtn, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
-                    <Pencil size={14} color={DESIGN_COLORS.primary} />
+                  <TouchableOpacity
+                    onPress={() => setIsEditing(true)}
+                    style={styles.editBtn}
+                    activeOpacity={0.7}
+                  >
+                    <Pencil size={13} color={C.primary} />
                     <Text style={styles.editBtnText}>Edit Profile</Text>
                   </TouchableOpacity>
                 </>
               ) : (
-                <View style={styles.editFormGroup}>
+                <View style={styles.editForm}>
                   <Text style={styles.editLabel}>Display Name</Text>
                   <TextInput
                     style={styles.editInput}
                     value={editName}
                     onChangeText={setEditName}
                     placeholder="Enter Display Name"
+                    placeholderTextColor={C.textMuted}
                   />
 
                   <Text style={styles.editLabel}>Username</Text>
@@ -169,6 +121,7 @@ export default function ProfileScreen() {
                     onChangeText={setEditUsername}
                     autoCapitalize="none"
                     placeholder="Enter Username"
+                    placeholderTextColor={C.textMuted}
                   />
 
                   <View style={styles.editBtnRow}>
@@ -184,227 +137,112 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          {/* User Metrics Summary */}
-          <View style={styles.metricsRow}>
-            <View style={styles.metricBox}>
-              <Text style={styles.metricVal}>{totalDrops}</Text>
-              <Text style={styles.metricLabel}>Total Drops</Text>
+          {/* ─── Stats Row ─── */}
+          <View style={styles.statsRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{totalDrops}</Text>
+              <Text style={styles.statLabel}>Total Drops</Text>
             </View>
-            <View style={styles.metricDivider} />
-            <View style={styles.metricBox}>
-              <Text style={styles.metricVal}>{currentStreak} Days</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Text style={styles.metricLabel}>Best Streak</Text>
-                <Flame size={14} color={DESIGN_COLORS.accent} />
+            <View style={styles.statDivider} />
+            <View style={styles.statBox}>
+              <View style={styles.statValueRow}>
+                <Text style={styles.statValue}>{currentStreak}</Text>
+                <Flame size={16} color={C.accent} />
               </View>
+              <Text style={styles.statLabel}>Day Streak</Text>
             </View>
-            <View style={styles.metricDivider} />
-            <View style={styles.metricBox}>
-              <Text style={styles.metricVal}>{totalDrops > 0 ? '100%' : '0%'}</Text>
-              <Text style={styles.metricLabel}>Accuracy</Text>
+            <View style={styles.statDivider} />
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>
+                {totalDrops > 0 ? '100%' : '0%'}
+              </Text>
+              <Text style={styles.statLabel}>Accuracy</Text>
             </View>
           </View>
 
-          {/* FRIENDS & GROUPS MANAGEMENT SECTION */}
-          <View style={styles.socialCard}>
-            <View style={styles.socialHeaderRow}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text style={styles.sectionHeader}>Friends & Groups</Text>
-                <Users size={20} color={DESIGN_COLORS.textPrimary} />
-              </View>
-              <View style={styles.socialTabToggle}>
-                <TouchableOpacity
-                  style={[styles.socialTabBtn, socialTab === 'friends' && styles.socialTabActive]}
-                  onPress={() => setSocialTab('friends')}
-                >
-                  <Text style={[styles.socialTabText, socialTab === 'friends' && styles.socialTextActive]}>
-                    Friends ({friends.length})
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.socialTabBtn, socialTab === 'groups' && styles.socialTabActive]}
-                  onPress={() => setSocialTab('groups')}
-                >
-                  <Text style={[styles.socialTabText, socialTab === 'groups' && styles.socialTextActive]}>
-                    Groups ({groups.length})
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* FRIENDS TAB CONTENT */}
-            {socialTab === 'friends' ? (
-              <View style={styles.socialContentStack}>
-                <View style={styles.inputActionRow}>
-                  <TextInput
-                    style={styles.socialInput}
-                    placeholder="Enter friend's username..."
-                    placeholderTextColor={DESIGN_COLORS.textSecondary}
-                    value={friendSearchInput}
-                    onChangeText={setFriendSearchInput}
-                    autoCapitalize="none"
-                  />
-                  <TouchableOpacity style={styles.addBtn} onPress={handleAddFriend}>
-                    <Text style={styles.addBtnText}>+ Add</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.socialList}>
-                  {friends.length > 0 ? (
-                    friends.map((friend) => (
-                      <View key={friend.id} style={styles.socialRow}>
-                        <View style={styles.avatarMini}>
-                          <Text style={styles.avatarMiniText}>
-                            {friend.username.slice(0, 2).toUpperCase()}
-                          </Text>
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.socialName}>{friend.display_name || friend.username}</Text>
-                          <Text style={styles.socialSub}>@{friend.username}</Text>
-                        </View>
-                        <TouchableOpacity onPress={() => removeFriend(friend.id)}>
-                          <Text style={styles.removeText}>Remove</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ))
-                  ) : (
-                    <Text style={styles.emptySocialText}>No friends added yet. Type a username above to connect!</Text>
-                  )}
-                </View>
-              </View>
-            ) : (
-              /* GROUPS TAB CONTENT */
-              <View style={styles.socialContentStack}>
-                {/* Create Group */}
-                <View style={styles.inputActionRow}>
-                  <TextInput
-                    style={styles.socialInput}
-                    placeholder="New Group Name (e.g. Dorm 3rd Floor)"
-                    placeholderTextColor={DESIGN_COLORS.textSecondary}
-                    value={newGroupNameInput}
-                    onChangeText={setNewGroupNameInput}
-                  />
-                  <TouchableOpacity style={styles.addBtn} onPress={handleCreateGroup}>
-                    <Text style={styles.addBtnText}>Create</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Join Group */}
-                <View style={styles.inputActionRow}>
-                  <TextInput
-                    style={styles.socialInput}
-                    placeholder="6-Letter Invite Code (e.g. KUL999)"
-                    placeholderTextColor={DESIGN_COLORS.textSecondary}
-                    value={joinInviteCodeInput}
-                    onChangeText={setJoinInviteCodeInput}
-                    autoCapitalize="characters"
-                    maxLength={6}
-                  />
-                  <TouchableOpacity style={[styles.addBtn, { backgroundColor: DESIGN_COLORS.secondary }]} onPress={handleJoinGroup}>
-                    <Text style={styles.addBtnText}>Join</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.socialList}>
-                  {groups.length > 0 ? (
-                    groups.map((group) => (
-                      <View key={group.id} style={styles.socialRow}>
-                        <View style={[styles.avatarMini, { backgroundColor: DESIGN_COLORS.primarySurface }]}>
-                          <Home size={16} color={DESIGN_COLORS.primary} />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.socialName}>{group.name}</Text>
-                          <Text style={styles.socialSub}>Invite Code: {group.invite_code}</Text>
-                        </View>
-                      </View>
-                    ))
-                  ) : (
-                    <Text style={styles.emptySocialText}>No groups joined yet. Create one or enter an invite code!</Text>
-                  )}
-                </View>
-              </View>
-            )}
-          </View>
-
-          {/* Settings Section */}
-          <View style={styles.settingsCard}>
-            <Text style={styles.sectionHeader}>Preferences</Text>
+          {/* ─── Preferences ─── */}
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Preferences</Text>
 
             <View style={styles.settingRow}>
-              <View style={styles.settingTextCol}>
+              <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>Private by Default</Text>
                 <Text style={styles.settingSub}>Keep new drops visible to friends only</Text>
               </View>
               <Switch
                 value={privacy}
                 onValueChange={setPrivacy}
-                trackColor={{ true: DESIGN_COLORS.primary, false: DESIGN_COLORS.border }}
+                trackColor={{ true: C.primary, false: C.border }}
+                thumbColor="#FFFFFF"
               />
             </View>
 
             <View style={styles.settingRow}>
-              <View style={styles.settingTextCol}>
+              <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>Push Notifications</Text>
-                <Text style={styles.settingSub}>Get alerts for leaderboard jumps and reactions</Text>
+                <Text style={styles.settingSub}>Alerts for leaderboard jumps and reactions</Text>
               </View>
               <Switch
                 value={notifications}
                 onValueChange={setNotifications}
-                trackColor={{ true: DESIGN_COLORS.primary, false: DESIGN_COLORS.border }}
+                trackColor={{ true: C.primary, false: C.border }}
+                thumbColor="#FFFFFF"
               />
             </View>
 
             <View style={styles.settingRow}>
-              <View style={styles.settingTextCol}>
+              <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>Haptic Feedback</Text>
                 <Text style={styles.settingSub}>Vibrate on drop logging and upvotes</Text>
               </View>
               <Switch
                 value={haptics}
                 onValueChange={setHaptics}
-                trackColor={{ true: DESIGN_COLORS.primary, false: DESIGN_COLORS.border }}
+                trackColor={{ true: C.primary, false: C.border }}
+                thumbColor="#FFFFFF"
               />
             </View>
 
-            <View style={[styles.settingRow, styles.noBorderRow]}>
-              <View style={styles.settingTextCol}>
+            <View style={[styles.settingRow, styles.settingRowLast]}>
+              <View style={styles.settingInfo}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={styles.settingLabel}>Stealth Mode</Text>
-                  <Ghost size={16} color={DESIGN_COLORS.textPrimary} />
+                  <Ghost size={14} color={C.textPrimary} />
                 </View>
-                <Text style={styles.settingSub}>Hide online indicator from active feed</Text>
+                <Text style={styles.settingSub}>Hide your online indicator from feed</Text>
               </View>
               <Switch
                 value={stealthMode}
                 onValueChange={setStealthMode}
-                trackColor={{ true: DESIGN_COLORS.primary, false: DESIGN_COLORS.border }}
+                trackColor={{ true: C.primary, false: C.border }}
+                thumbColor="#FFFFFF"
               />
             </View>
           </View>
 
-          {/* Account Actions */}
-          <View style={styles.accountCard}>
-            <TouchableOpacity 
-              style={styles.actionBtn}
+          {/* ─── Account Actions ─── */}
+          <View style={styles.actionsGroup}>
+            <TouchableOpacity
+              style={styles.actionRow}
               activeOpacity={0.7}
-              onPress={() => Alert.alert('Export Complete 📦', 'Your drop data history has been exported as JSON.')}
+              onPress={() => Alert.alert('Export Complete 📦', 'Your data has been exported as JSON.')}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text style={styles.actionBtnText}>Export Personal History</Text>
-                <Package size={16} color={DESIGN_COLORS.textPrimary} />
-              </View>
+              <Package size={18} color={C.textPrimary} />
+              <Text style={styles.actionText}>Export Personal History</Text>
+              <ChevronRight size={16} color={C.textMuted} />
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.actionBtn, styles.signOutBtn]}
+            <TouchableOpacity
+              style={[styles.actionRow, styles.actionRowDanger]}
               activeOpacity={0.7}
               onPress={() => signOut()}
             >
-              <Text style={styles.signOutBtnText}>Sign Out</Text>
+              <LogOut size={18} color={C.danger} />
+              <Text style={styles.actionTextDanger}>Sign Out</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={{ height: 90 }} />
+          <View style={{ height: 100 }} />
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -412,11 +250,11 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  screenOuter: {
+  screen: {
     flex: 1,
-    backgroundColor: DESIGN_COLORS.background,
+    backgroundColor: C.bg,
   },
-  container: {
+  safe: {
     flex: 1,
   },
   scrollContent: {
@@ -424,318 +262,269 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     gap: 20,
   },
-  title: {
-    fontSize: 28,
-    fontFamily: 'Nunito-ExtraBold',
-    color: DESIGN_COLORS.textPrimary,
+
+  /* ── Header ── */
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: C.textPrimary,
+    letterSpacing: -1,
   },
+
+  /* ── User Card ── */
   userCard: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: DESIGN_COLORS.card,
+    backgroundColor: C.card,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
+    borderColor: C.border,
     padding: 20,
     gap: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: { elevation: 2 },
+      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
+    }),
   },
   avatarLarge: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: DESIGN_COLORS.primary,
+    backgroundColor: C.warmSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
     fontSize: 20,
-    fontFamily: 'Inter-Bold',
-    color: '#2D1B15',
+    fontWeight: '800',
+    color: C.primary,
   },
-  userMetaCol: {
+  userMeta: {
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
-  userNameRow: {
+  nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
   userName: {
     fontSize: 18,
-    fontFamily: 'Nunito-ExtraBold',
-    color: DESIGN_COLORS.textPrimary,
+    fontWeight: '800',
+    color: C.textPrimary,
   },
   levelPill: {
-    backgroundColor: DESIGN_COLORS.primarySurface,
+    backgroundColor: C.warmSurface,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
   },
   levelPillText: {
     fontSize: 11,
-    fontFamily: 'Inter-Bold',
-    color: DESIGN_COLORS.primary,
+    fontWeight: '800',
+    color: C.primary,
   },
   userHandle: {
     fontSize: 13,
-    fontFamily: 'Inter-SemiBold',
-    color: DESIGN_COLORS.textSecondary,
+    fontWeight: '600',
+    color: C.textSecondary,
   },
   editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     marginTop: 4,
   },
   editBtnText: {
     fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: DESIGN_COLORS.primary,
+    fontWeight: '700',
+    color: C.primary,
   },
-  editFormGroup: {
+
+  /* ── Edit Form ── */
+  editForm: {
     gap: 6,
   },
   editLabel: {
     fontSize: 11,
-    fontFamily: 'Inter-Bold',
-    color: DESIGN_COLORS.textSecondary,
+    fontWeight: '700',
+    color: C.textSecondary,
   },
   editInput: {
-    backgroundColor: DESIGN_COLORS.background,
+    backgroundColor: C.bg,
     borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    fontSize: 13,
-    color: DESIGN_COLORS.textPrimary,
+    borderColor: C.border,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
+    color: C.textPrimary,
   },
   editBtnRow: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 4,
+    marginTop: 6,
   },
   saveBtn: {
-    backgroundColor: DESIGN_COLORS.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 8,
+    backgroundColor: C.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
   },
   saveBtnText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontSize: 13,
+    fontWeight: '800',
     color: '#FFFFFF',
   },
   cancelBtn: {
-    backgroundColor: DESIGN_COLORS.background,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    backgroundColor: C.bg,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
+    borderColor: C.border,
   },
   cancelBtnText: {
-    fontSize: 12,
-    fontFamily: 'Inter-SemiBold',
-    color: DESIGN_COLORS.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+    color: C.textSecondary,
   },
-  metricsRow: {
+
+  /* ── Stats Row ── */
+  statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: DESIGN_COLORS.card,
+    backgroundColor: C.card,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-    paddingVertical: 16,
+    borderColor: C.border,
+    paddingVertical: 18,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: { elevation: 2 },
+      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
+    }),
   },
-  metricBox: {
+  statBox: {
+    flex: 1,
     alignItems: 'center',
     gap: 2,
   },
-  metricVal: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: DESIGN_COLORS.textPrimary,
+  statValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  metricLabel: {
+  statValue: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: C.textPrimary,
+  },
+  statLabel: {
     fontSize: 11,
-    fontFamily: 'Inter-Regular',
-    color: DESIGN_COLORS.textSecondary,
+    fontWeight: '600',
+    color: C.textSecondary,
   },
-  metricDivider: {
+  statDivider: {
     width: 1,
-    height: '100%',
-    backgroundColor: DESIGN_COLORS.border,
+    height: '60%',
+    backgroundColor: C.border,
+    alignSelf: 'center',
   },
-  socialCard: {
-    backgroundColor: DESIGN_COLORS.card,
+
+  /* ── Section Card ── */
+  sectionCard: {
+    backgroundColor: C.card,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
+    borderColor: C.border,
     padding: 20,
-    gap: 16,
+    gap: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: { elevation: 2 },
+      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
+    }),
   },
-  socialHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: C.textPrimary,
+    marginBottom: 12,
   },
-  socialTabToggle: {
-    flexDirection: 'row',
-    backgroundColor: DESIGN_COLORS.background,
-    borderRadius: 12,
-    padding: 2,
-  },
-  socialTabBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-  },
-  socialTabActive: {
-    backgroundColor: DESIGN_COLORS.primary,
-  },
-  socialTabText: {
-    fontSize: 11,
-    fontFamily: 'Inter-SemiBold',
-    color: DESIGN_COLORS.textSecondary,
-  },
-  socialTextActive: {
-    color: '#FFFFFF',
-    fontFamily: 'Inter-Bold',
-  },
-  socialContentStack: {
-    gap: 12,
-  },
-  inputActionRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  socialInput: {
-    flex: 1,
-    backgroundColor: DESIGN_COLORS.background,
-    borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 13,
-    color: DESIGN_COLORS.textPrimary,
-  },
-  addBtn: {
-    backgroundColor: DESIGN_COLORS.primary,
-    paddingHorizontal: 14,
-    justifyContent: 'center',
-    borderRadius: 12,
-  },
-  addBtnText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: '#EFEBE9',
-  },
-  socialList: {
-    gap: 10,
-  },
-  socialRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: DESIGN_COLORS.border,
-  },
-  avatarMini: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: DESIGN_COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarMiniText: {
-    fontSize: 11,
-    fontFamily: 'Inter-Bold',
-    color: '#2D1B15',
-  },
-  socialName: {
-    fontSize: 13,
-    fontFamily: 'Inter-Bold',
-    color: DESIGN_COLORS.textPrimary,
-  },
-  socialSub: {
-    fontSize: 11,
-    color: DESIGN_COLORS.textSecondary,
-  },
-  removeText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: '#C5221F',
-  },
-  emptySocialText: {
-    fontSize: 12,
-    color: DESIGN_COLORS.textSecondary,
-    fontStyle: 'italic',
-    paddingVertical: 4,
-  },
-  settingsCard: {
-    backgroundColor: DESIGN_COLORS.card,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-    padding: 20,
-    gap: 16,
-  },
-  sectionHeader: {
-    fontSize: 18,
-    fontFamily: 'Nunito-ExtraBold',
-    color: DESIGN_COLORS.textPrimary,
-  },
+
+  /* ── Setting Row ── */
   settingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingBottom: 14,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: DESIGN_COLORS.border,
+    borderBottomColor: C.border,
   },
-  noBorderRow: {
+  settingRowLast: {
     borderBottomWidth: 0,
     paddingBottom: 0,
   },
-  settingTextCol: {
+  settingInfo: {
     flex: 1,
     paddingRight: 16,
     gap: 2,
   },
   settingLabel: {
     fontSize: 14,
-    fontFamily: 'Inter-Bold',
-    color: DESIGN_COLORS.textPrimary,
+    fontWeight: '700',
+    color: C.textPrimary,
   },
   settingSub: {
     fontSize: 12,
-    color: DESIGN_COLORS.textSecondary,
+    fontWeight: '500',
+    color: C.textSecondary,
   },
-  accountCard: {
+
+  /* ── Account Actions ── */
+  actionsGroup: {
     gap: 10,
   },
-  actionBtn: {
-    backgroundColor: DESIGN_COLORS.card,
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: C.card,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-    paddingVertical: 14,
-    alignItems: 'center',
+    borderColor: C.border,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
   },
-  actionBtnText: {
+  actionText: {
+    flex: 1,
     fontSize: 14,
-    fontFamily: 'Inter-Bold',
-    color: DESIGN_COLORS.textPrimary,
+    fontWeight: '700',
+    color: C.textPrimary,
   },
-  signOutBtn: {
-    backgroundColor: '#3E2723',
-    borderColor: '#5D4037',
+  actionRowDanger: {
+    borderColor: '#FFEBEE',
+    backgroundColor: '#FFFAFA',
   },
-  signOutBtnText: {
+  actionTextDanger: {
+    flex: 1,
     fontSize: 14,
-    fontFamily: 'Inter-Bold',
-    color: '#C5221F',
+    fontWeight: '700',
+    color: C.danger,
   },
 });

@@ -63,11 +63,20 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 70, // Fixed height for the pill
     // Subtle shadow for the pill itself
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.25)',
+      },
+    }),
   },
   navItem: {
     alignItems: 'center',
@@ -94,15 +103,20 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     backgroundColor: 'rgba(216, 67, 21, 0.3)', // Warm orange transparent base
     // Extensive shadow to create the glow effect
-    shadowColor: '#D84315', 
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 15,
     ...Platform.select({
+      ios: {
+        shadowColor: '#D84315',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.9,
+        shadowRadius: 15,
+      },
       android: {
         elevation: 10,
         // Optional: on Android, shadow color coloring doesn't always pop as well,
         // so we rely on the semi-transparent background to help simulate the glow.
+      },
+      web: {
+        boxShadow: '0 0 15px rgba(216, 67, 21, 0.9)',
       },
     }),
   },
@@ -114,11 +128,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
-    shadowColor: '#D84315',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
-    elevation: 6,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#D84315',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.6,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 6,
+      },
+      web: {
+        boxShadow: '0 4px 8px rgba(216, 67, 21, 0.6)',
+      },
+    }),
   },
 });
 

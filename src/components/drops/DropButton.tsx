@@ -132,11 +132,20 @@ const styles = StyleSheet.create({
     height: SIZE,
     borderRadius: SIZE / 2,
     zIndex: 10,
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.6,
-    shadowRadius: 25,
-    elevation: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#FFD700',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.6,
+        shadowRadius: 25,
+      },
+      android: {
+        elevation: 16,
+      },
+      web: {
+        boxShadow: '0 10px 25px rgba(255, 215, 0, 0.6)',
+      },
+    }),
   },
   gradientRing: {
     flex: 1,
@@ -172,9 +181,14 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 2,
     fontSize: 18,
-    textShadowColor: 'rgba(255, 215, 0, 0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
+    ...Platform.select({
+      ios: {
+        textShadowColor: 'rgba(255, 215, 0, 0.5)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 8,
+      },
+      web: { textShadow: '0px 2px 8px rgba(255, 215, 0, 0.5)' },
+    }),
   },
   actionPill: {
     paddingHorizontal: 10,

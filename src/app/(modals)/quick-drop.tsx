@@ -114,13 +114,13 @@ export default function QuickDropModal() {
       Animated.timing(backdropAnim, {
         toValue: 1,
         duration: 300,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
       Animated.timing(sheetTranslateY, {
         toValue: 0,
         duration: 400,
         easing: Easing.out(Easing.back(1)),
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
     ]).start();
   }, [backdropAnim, sheetTranslateY]);
@@ -142,12 +142,12 @@ export default function QuickDropModal() {
       Animated.timing(backdropAnim, {
         toValue: 0,
         duration: 200,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
       Animated.timing(sheetTranslateY, {
         toValue: 400,
         duration: 250,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
     ]).start(() => {
       router.back();
@@ -171,7 +171,7 @@ export default function QuickDropModal() {
     await recordDrop({
       bristolScale: bristolScale as any,
       intensity: sizeBadge === 'Massive' ? 'HEAVY_ARTILLERY' : sizeBadge === 'Large' ? 'HEAVY_ARTILLERY' : 'NORMAL',
-      privacyLevel: privacy === 'private' ? 'PRIVATE' : 'PUBLIC' as any,
+      privacyLevel: privacy === 'private' ? 'PRIVATE' : privacy === 'group' ? 'GROUP' : 'FRIENDS',
       customTitle: titleToUse,
     });
 
@@ -666,11 +666,16 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: DESIGN_COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: DESIGN_COLORS.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+      },
+      android: { elevation: 4 },
+      web: { boxShadow: '0 4px 8px rgba(141, 110, 99, 0.25)' },
+    }),
   },
   submitBtnDisabled: {
     opacity: 0.6,

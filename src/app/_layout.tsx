@@ -65,13 +65,15 @@ export default function RootLayout() {
 
       const inAuthGroup = segments[0] === '(auth)';
 
+      // Defer navigation to next tick so the navigator is fully mounted
       if (!isAuthenticated && !inAuthGroup) {
-        router.replace('/(auth)/sign-in');
+        setTimeout(() => router.replace('/(auth)/sign-in'), 0);
       } else if (isAuthenticated && inAuthGroup) {
-        router.replace('/(tabs)');
+        setTimeout(() => router.replace('/(tabs)'), 0);
       }
     }
   }, [appIsReady, isInitialized, isAuthenticated, fontsLoaded, segments, router]);
+
 
   if (!appIsReady || !isInitialized || !fontsLoaded) {
     return null;

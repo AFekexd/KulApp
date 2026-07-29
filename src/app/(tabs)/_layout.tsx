@@ -4,7 +4,7 @@
  */
 import { Tabs, useRouter } from 'expo-router';
 import { Text, View, StyleSheet, Platform, TouchableOpacity } from 'react-native';
-import { Home, Rss, Trophy, User } from 'lucide-react-native';
+import { Home, Rss, Trophy, User, Users } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 
 const DESIGN_COLORS = {
@@ -52,7 +52,7 @@ export default function TabLayout() {
             },
             android: { elevation: 12 },
             web: { 
-              boxShadow: '0 10px 30px rgba(26, 14, 11, 0.15)',
+              boxShadow: '0 10px 20px rgba(26, 14, 11, 0.15)',
               backdropFilter: 'blur(24px)',
             },
           }),
@@ -121,19 +121,19 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 4. LEADERBOARD TAB */}
+      {/* 4. SOCIAL TAB — Friends & Groups */}
       <Tabs.Screen
-        name="stats"
+        name="social"
         options={{
-          title: 'Leaderboard',
+          title: 'Social',
           tabBarIcon: ({ focused }) => (
             <View style={styles.tabItem}>
-              <Trophy
+              <Users
                 size={22}
                 color={focused ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary}
                 style={[styles.tabIcon, focused && styles.activeTabIcon]}
               />
-              <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>Rank</Text>
+              <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>Social</Text>
             </View>
           ),
         }}
@@ -154,6 +154,14 @@ export default function TabLayout() {
               <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>Profile</Text>
             </View>
           ),
+        }}
+      />
+
+      {/* Hidden: Stats/Leaderboard (accessible via navigation but not in tab bar) */}
+      <Tabs.Screen
+        name="stats"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
@@ -207,7 +215,7 @@ const styles = StyleSheet.create({
         shadowRadius: 16,
       },
       android: { elevation: 12 },
-      web: { boxShadow: '0 0 30px rgba(169, 92, 51, 0.6)' },
+      web: { boxShadow: '0 0 16px rgba(169, 92, 51, 0.6)' },
     }),
   },
   centerBtnPlus: {

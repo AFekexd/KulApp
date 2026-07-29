@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
       },
       android: { elevation: 2 },
-      web: { boxShadow: '0 2px 8px rgba(93,64,55,0.06)' },
+      web: { boxShadow: '0 2px 8px rgba(26, 14, 11, 0.2)' },
     }),
   },
   cardTopRow: {
