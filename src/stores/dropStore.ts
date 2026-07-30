@@ -218,7 +218,13 @@ export const useDropStore = create<DropState>((set, get) => ({
 
     for (const drop of pendingSync) {
       try {
-        const { error } = await supabase.from('drops').insert(drop as any);
+        const dropToInsert = { ...drop };
+        // Fix user_id if it was recorded while offline/unauthenticated
+        if (dropToInsert.user_id === 'local-user') {
+          dropToInsert.user_id = userId;
+        }
+
+        const { error } = await supabase.from('drops').insert(dropToInsert as any);
         if (error) {
           console.error(`[DropStore] Sync failed for ${drop.id}:`, error.message);
           remaining.push(drop);

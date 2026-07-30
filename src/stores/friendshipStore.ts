@@ -48,26 +48,59 @@ export const useFriendshipStore = create<FriendshipState>((set, get) => ({
         .or(`user_a.eq.${userId},user_b.eq.${userId}`);
 
       if (!error && data) {
+        const friendIds = new Set<string>();
+        data.forEach((f: any) => {
+          friendIds.add(f.user_a === userId ? f.user_b : f.user_a);
+        });
+
+        const validFriendIds = Array.from(friendIds).filter(id => 
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+        );
+
+        let profiles: Profile[] = [];
+        if (validFriendIds.length > 0) {
+          const { data: fetchedProfiles } = await (supabase as any)
+            .from('profiles')
+            .select('*')
+            .in('id', validFriendIds);
+          profiles = fetchedProfiles || [];
+        }
+
+        const profileMap = new Map<string, Profile>();
+        profiles?.forEach((p: Profile) => profileMap.set(p.id, p));
+
         const acceptedFriends: Profile[] = [];
         const pending: Friendship[] = [];
 
         data.forEach((f: any) => {
+          const isUserA = f.user_a === userId;
+          const otherUserId = isUserA ? f.user_b : f.user_a;
+          const otherProfile = profileMap.get(otherUserId);
+
           if (f.status === 'ACCEPTED') {
-            const friendId = f.user_a === userId ? f.user_b : f.user_a;
-            acceptedFriends.push({
-              id: friendId,
-              username: `Friend_${friendId.slice(0, 5)}`,
-              display_name: `Pooper Friend`,
-              avatar_url: null,
-              current_level: 1,
-              total_xp: 100,
-              streak_days: 3,
-              default_privacy: 'FRIENDS',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            });
+            if (otherProfile) {
+              acceptedFriends.push(otherProfile);
+            } else {
+              // Fallback
+              acceptedFriends.push({
+                id: otherUserId,
+                username: `Friend_${otherUserId.slice(0, 5)}`,
+                display_name: `Pooper Friend`,
+                avatar_url: null,
+                current_level: 1,
+                total_xp: 100,
+                streak_days: 3,
+                default_privacy: 'FRIENDS',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              });
+            }
           } else if (f.status === 'PENDING' && f.user_b === userId) {
-            pending.push(f);
+            // Incoming request
+            pending.push({
+              ...f,
+              friend_profile: otherProfile,
+            });
           }
         });
 

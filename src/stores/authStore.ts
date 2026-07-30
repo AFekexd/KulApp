@@ -4,6 +4,8 @@ import { storage } from '@/lib/mmkv';
 import type { Session } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 import { Platform } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -59,6 +61,7 @@ interface AuthState {
   signUpWithEmail: (email: string, pass: string, username: string) => Promise<{ error: Error | null }>;
   signInWithApple: () => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
+  uploadAvatar: (uri: string) => Promise<{ error: Error | null }>;
   continueAsGuest: () => void;
   signOut: () => Promise<void>;
   fetchProfile: () => Promise<void>;
@@ -192,16 +195,103 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signInWithGoogle: async () => {
+    // ... existing signInWithGoogle implementation
     try {
-      if (Platform.OS === 'web') {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-        });
-        return { error };
+      const redirectUrl = makeRedirectUri({
+        path: '/auth/callback',
+      });
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) return { error };
+
+      if (data?.url) {
+        const res = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+        
+        if (res.type === 'success' && res.url) {
+          const params = new URLSearchParams(res.url.split('#')[1] || res.url.split('?')[1]);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+
+          if (accessToken && refreshToken) {
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (sessionError) return { error: sessionError };
+            return { error: null };
+          } else {
+            return { error: new Error('Session parsing failed from callback URL.') };
+          }
+        } else {
+          return { error: new Error('Auth session was cancelled or failed.') };
+        }
       }
-      return { error: new Error('Google Sign-In requires native client configuration.') };
+      
+      return { error: new Error('No OAuth URL returned from Supabase.') };
     } catch (err: any) {
       return { error: err instanceof Error ? err : new Error('Unknown error') };
+    }
+  },
+
+  uploadAvatar: async (uri: string) => {
+    try {
+      const session = get().session;
+      if (!session?.user) throw new Error('Nem vagy bejelentkezve.');
+
+      // Remove query parameters or hash if any for extension extraction
+      const cleanUri = uri.split('?')[0].split('#')[0];
+      let fileExt = cleanUri.split('.').pop() || 'jpg';
+      if (fileExt.length > 4 || fileExt === 'blob') fileExt = 'jpg'; // fallback for web blob urls
+
+      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      let fileBody: any;
+      let contentType = `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
+
+      if (Platform.OS === 'web') {
+        const response = await fetch(uri);
+        fileBody = await response.blob();
+        contentType = fileBody.type || contentType;
+      } else {
+        fileBody = new FormData();
+        fileBody.append('file', {
+          uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
+          name: fileName,
+          type: contentType,
+        } as any);
+      }
+
+      const { error: uploadError } = await (supabase as any).storage
+        .from('avatars')
+        .upload(filePath, fileBody, {
+          contentType: contentType,
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('Upload Error Details:', uploadError);
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = (supabase as any).storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      await get().updateProfile({ avatar_url: publicUrl });
+
+      return { error: null };
+    } catch (err: any) {
+      console.error('Avatar upload caught error:', err);
+      return { error: err instanceof Error ? err : new Error('Hiba a feltöltés során') };
     }
   },
 
@@ -233,6 +323,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       storage.remove(ACTIVE_PROFILE_KEY);
       storage.remove('kulapp:feed_cache');
       storage.remove('kulapp:leaderboard_cache');
+      storage.remove('kulapp:drops:pending');
+      storage.remove('kulapp:drops:today_count');
+      storage.remove('kulapp:drops:today_date');
+      storage.remove('kulapp:drops:streak');
+      storage.remove('kulapp:last_drop_time');
       set({ 
         session: null, 
         profile: {

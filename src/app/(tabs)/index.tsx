@@ -21,6 +21,8 @@ import { useLeaderboardStore, LeaderboardUser } from '@/stores/leaderboardStore'
 import { useFeedStore, FeedItem } from '@/stores/feedStore';
 import { useDropStore } from '@/stores/dropStore';
 import { useAuthStore } from '@/stores/authStore';
+import PageTransition from '@/components/PageTransition';
+import { Image } from 'expo-image';
 
 const DESIGN_COLORS = {
   background: '#F7F7F5',
@@ -88,9 +90,10 @@ export default function HomeScreen() {
     return `${Math.floor(hours / 24)} d ago`;
   };
 
-        return (
-    <LinearGradient colors={['#2D1B15', '#3E2723']} style={styles.screenOuter}>
-      <SafeAreaView style={styles.container} edges={['top']}>
+  return (
+    <PageTransition>
+      <LinearGradient colors={['#2D1B15', '#3E2723']} style={styles.screenOuter}>
+        <SafeAreaView style={styles.container} edges={['top']}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -165,8 +168,12 @@ export default function HomeScreen() {
                 <View style={styles.feedList}>
                   {feedItems.slice(0, 2).map((item) => (
                     <View key={item.id} style={[styles.feedMiniCard]}>
-                      <View style={styles.feedAvatar}>
-                        <Text style={styles.feedAvatarText}>{item.profiles.username.charAt(0).toUpperCase()}</Text>
+                      <View style={[styles.feedAvatar, !item.profiles?.avatar_url && { backgroundColor: '#5D4037' }]}>
+                        {item.profiles?.avatar_url ? (
+                          <Image source={{ uri: item.profiles.avatar_url }} style={styles.feedAvatarImage} contentFit="cover" />
+                        ) : (
+                          <Text style={styles.feedAvatarText}>{item.profiles.username.charAt(0).toUpperCase()}</Text>
+                        )}
                       </View>
                       <View style={styles.feedMiniInfo}>
                         <Text style={styles.feedUserName}>{item.profiles.username}</Text>
@@ -187,6 +194,7 @@ export default function HomeScreen() {
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
+    </PageTransition>
   );
 }
 
@@ -406,6 +414,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+  },
+  feedAvatarImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
   },
   feedAvatarText: {
     fontSize: 14,

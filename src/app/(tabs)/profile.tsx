@@ -1,9 +1,9 @@
 /**
  * Profile Screen — PoopTracker
- * Native iOS 18 style. Light mode. Stats summary, profile editing, preferences, account.
+ * Native iOS 18 style. Dark mode theme. Stats summary, profile editing, preferences, account.
  * Social / Friends & Groups are on their own dedicated tab.
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,21 +18,25 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDropStore } from '@/stores/dropStore';
 import { useAuthStore } from '@/stores/authStore';
-import { Pencil, Flame, Ghost, Package, LogOut, ChevronRight } from 'lucide-react-native';
+import { Pencil, Flame, Ghost, Package, LogOut, ChevronRight, Camera } from 'lucide-react-native';
+import PageTransition from '@/components/PageTransition';
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'expo-image';
 
 const C = {
-  bg: '#F7F7F5',
-  card: '#FFFFFF',
-  primary: '#7C4D2E',
-  secondary: '#C89A5A',
-  accent: '#A95C33',
-  success: '#4CAF50',
+  bg: '#2D1B15',
+  card: '#3E2723',
+  primary: '#A95C33',
+  secondary: '#8D6E63',
+  accent: '#FF9800',
+  success: '#33691E',
   danger: '#D32F2F',
-  textPrimary: '#1B1B1B',
-  textSecondary: '#6B6B6B',
-  textMuted: '#9E9E9E',
-  border: '#ECECEC',
-  warmSurface: '#F7F2EE',
+  dangerDim: 'rgba(211, 47, 47, 0.15)',
+  textPrimary: '#EFEBE9',
+  textSecondary: '#BCAAA4',
+  textMuted: '#8A7F75',
+  border: '#5D4037',
+  warmSurface: '#4E342E',
 };
 
 export default function ProfileScreen() {
@@ -40,8 +44,24 @@ export default function ProfileScreen() {
   const { profile, updateProfile, signOut } = useAuthStore();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [editName, setEditName] = useState(profile?.display_name || profile?.username || 'User');
   const [editUsername, setEditUsername] = useState(profile?.username || 'user');
+
+  // Update edit form when profile changes (e.g. account switch)
+  useEffect(() => {
+    if (!isEditing && profile) {
+      setEditName(profile.display_name || profile.username || 'User');
+      setEditUsername(profile.username || 'user');
+    }
+  }, [profile, isEditing]);
+
+  // Fetch drops when profile screen is opened to ensure Total Drops is accurate
+  useEffect(() => {
+    if (profile?.id && profile.id !== 'guest-user') {
+      useDropStore.getState().fetchUserDrops(profile.id);
+    }
+  }, [profile?.id]);
 
   // Preference switches
   const [privacy, setPrivacy] = useState(false);
@@ -67,7 +87,33 @@ export default function ProfileScreen() {
     Alert.alert('Profile Saved! 💾', 'Your profile details have been updated.');
   };
 
+  const handlePickAvatar = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setIsUploading(true);
+        const { error } = await useAuthStore.getState().uploadAvatar(result.assets[0].uri);
+        if (error) {
+          Alert.alert('Upload Failed', error.message);
+        } else {
+          Alert.alert('Success', 'Profile picture updated successfully!');
+        }
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick image.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
+    <PageTransition>
     <View style={styles.screen}>
       <SafeAreaView style={styles.safe} edges={['top']}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -76,8 +122,19 @@ export default function ProfileScreen() {
 
           {/* ─── User Card ─── */}
           <View style={styles.userCard}>
-            <View style={styles.avatarLarge}>
-              <Text style={styles.avatarText}>{userInitials}</Text>
+            <View style={styles.avatarContainer}>
+              <TouchableOpacity onPress={handlePickAvatar} disabled={isUploading} activeOpacity={0.8}>
+                {profile?.avatar_url ? (
+                  <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} contentFit="cover" />
+                ) : (
+                  <View style={styles.avatarLarge}>
+                    <Text style={styles.avatarText}>{userInitials}</Text>
+                  </View>
+                )}
+                <View style={styles.editAvatarBadge}>
+                  <Camera size={14} color="#FFF" />
+                </View>
+              </TouchableOpacity>
             </View>
 
             <View style={styles.userMeta}>
@@ -172,8 +229,8 @@ export default function ProfileScreen() {
               <Switch
                 value={privacy}
                 onValueChange={setPrivacy}
-                trackColor={{ true: C.primary, false: C.border }}
-                thumbColor="#FFFFFF"
+                trackColor={{ false: C.warmSurface, true: C.primary }}
+                thumbColor="#FFF"
               />
             </View>
 
@@ -185,8 +242,8 @@ export default function ProfileScreen() {
               <Switch
                 value={notifications}
                 onValueChange={setNotifications}
-                trackColor={{ true: C.primary, false: C.border }}
-                thumbColor="#FFFFFF"
+                trackColor={{ false: C.warmSurface, true: C.primary }}
+                thumbColor="#FFF"
               />
             </View>
 
@@ -198,8 +255,8 @@ export default function ProfileScreen() {
               <Switch
                 value={haptics}
                 onValueChange={setHaptics}
-                trackColor={{ true: C.primary, false: C.border }}
-                thumbColor="#FFFFFF"
+                trackColor={{ false: C.warmSurface, true: C.primary }}
+                thumbColor="#FFF"
               />
             </View>
 
@@ -207,37 +264,33 @@ export default function ProfileScreen() {
               <View style={styles.settingInfo}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={styles.settingLabel}>Stealth Mode</Text>
-                  <Ghost size={14} color={C.textPrimary} />
+                  <Ghost size={14} color={C.textSecondary} />
                 </View>
                 <Text style={styles.settingSub}>Hide your online indicator from feed</Text>
               </View>
               <Switch
                 value={stealthMode}
                 onValueChange={setStealthMode}
-                trackColor={{ true: C.primary, false: C.border }}
-                thumbColor="#FFFFFF"
+                trackColor={{ false: C.warmSurface, true: C.primary }}
+                thumbColor="#FFF"
               />
             </View>
           </View>
 
-          {/* ─── Account Actions ─── */}
+          {/* ─── Actions ─── */}
           <View style={styles.actionsGroup}>
-            <TouchableOpacity
-              style={styles.actionRow}
-              activeOpacity={0.7}
-              onPress={() => Alert.alert('Export Complete 📦', 'Your data has been exported as JSON.')}
-            >
-              <Package size={18} color={C.textPrimary} />
+            <TouchableOpacity style={styles.actionRow} activeOpacity={0.7}>
+              <Package size={20} color={C.textPrimary} />
               <Text style={styles.actionText}>Export Personal History</Text>
-              <ChevronRight size={16} color={C.textMuted} />
+              <ChevronRight size={18} color={C.textSecondary} />
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.actionRow, styles.actionRowDanger]}
               activeOpacity={0.7}
-              onPress={() => signOut()}
+              onPress={signOut}
             >
-              <LogOut size={18} color={C.danger} />
+              <LogOut size={20} color={C.danger} />
               <Text style={styles.actionTextDanger}>Sign Out</Text>
             </TouchableOpacity>
           </View>
@@ -246,6 +299,7 @@ export default function ProfileScreen() {
         </ScrollView>
       </SafeAreaView>
     </View>
+    </PageTransition>
   );
 }
 
@@ -266,7 +320,7 @@ const styles = StyleSheet.create({
   /* ── Header ── */
   headerTitle: {
     fontSize: 32,
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     color: C.textPrimary,
     letterSpacing: -1,
   },
@@ -282,31 +336,57 @@ const styles = StyleSheet.create({
     gap: 16,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
+        shadowColor: '#1A0E0B',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
       },
       android: { elevation: 2 },
-      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
+      web: { boxShadow: '0 4px 10px rgba(26,14,11,0.3)' },
     }),
   },
   avatarLarge: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 66,
+    height: 66,
+    borderRadius: 33,
     backgroundColor: C.warmSurface,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  avatarContainer: {
+    position: 'relative',
+  },
+  avatarImage: {
+    width: 66,
+    height: 66,
+    borderRadius: 33,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  editAvatarBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: C.primary,
+    borderRadius: 14,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: C.card,
   },
   avatarText: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 22,
+    fontFamily: 'Nunito-ExtraBold',
     color: C.primary,
   },
   userMeta: {
     flex: 1,
     gap: 3,
+    justifyContent: 'center',
   },
   nameRow: {
     flexDirection: 'row',
@@ -314,8 +394,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   userName: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 20,
+    fontFamily: 'Nunito-ExtraBold',
     color: C.textPrimary,
   },
   levelPill: {
@@ -326,23 +406,23 @@ const styles = StyleSheet.create({
   },
   levelPillText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     color: C.primary,
   },
   userHandle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
     color: C.textSecondary,
   },
   editBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 4,
+    marginTop: 6,
   },
   editBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 13,
+    fontFamily: 'Inter-Bold',
     color: C.primary,
   },
 
@@ -352,7 +432,7 @@ const styles = StyleSheet.create({
   },
   editLabel: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
     color: C.textSecondary,
   },
   editInput: {
@@ -363,6 +443,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 14,
+    fontFamily: 'Inter-Medium',
     color: C.textPrimary,
   },
   editBtnRow: {
@@ -378,7 +459,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     color: '#FFFFFF',
   },
   cancelBtn: {
@@ -391,7 +472,7 @@ const styles = StyleSheet.create({
   },
   cancelBtnText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: C.textSecondary,
   },
 
@@ -405,13 +486,13 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
+        shadowColor: '#1A0E0B',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
       },
       android: { elevation: 2 },
-      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
+      web: { boxShadow: '0 4px 10px rgba(26,14,11,0.3)' },
     }),
   },
   statBox: {
@@ -425,13 +506,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   statValue: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 22,
+    fontFamily: 'Nunito-ExtraBold',
     color: C.textPrimary,
   },
   statLabel: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
     color: C.textSecondary,
   },
   statDivider: {
@@ -451,18 +532,18 @@ const styles = StyleSheet.create({
     gap: 4,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
+        shadowColor: '#1A0E0B',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
       },
       android: { elevation: 2 },
-      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
+      web: { boxShadow: '0 4px 10px rgba(26,14,11,0.3)' },
     }),
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 18,
+    fontFamily: 'Nunito-ExtraBold',
     color: C.textPrimary,
     marginBottom: 12,
   },
@@ -486,26 +567,26 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   settingLabel: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontFamily: 'Inter-Bold',
     color: C.textPrimary,
   },
   settingSub: {
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: 'Inter-Medium',
     color: C.textSecondary,
   },
 
   /* ── Account Actions ── */
   actionsGroup: {
-    gap: 10,
+    gap: 12,
   },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     backgroundColor: C.card,
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: C.border,
     paddingVertical: 16,
@@ -513,18 +594,18 @@ const styles = StyleSheet.create({
   },
   actionText: {
     flex: 1,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontFamily: 'Inter-Bold',
     color: C.textPrimary,
   },
   actionRowDanger: {
-    borderColor: '#FFEBEE',
-    backgroundColor: '#FFFAFA',
+    borderColor: 'rgba(211, 47, 47, 0.3)',
+    backgroundColor: C.dangerDim,
   },
   actionTextDanger: {
     flex: 1,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontFamily: 'Inter-Bold',
     color: C.danger,
   },
 });

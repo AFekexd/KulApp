@@ -83,10 +83,8 @@ export const useGroupStore = create<GroupState>((set, get) => ({
 
       if (!error && data) {
         const fetchedGroups = data.map((item: any) => item.groups).filter(Boolean);
-        if (fetchedGroups.length > 0) {
-          set({ groups: fetchedGroups });
-          saveGroupsCache(fetchedGroups);
-        }
+        set({ groups: fetchedGroups });
+        saveGroupsCache(fetchedGroups);
       }
     } catch (error) {
       console.error('Error fetching groups:', error);
@@ -225,6 +223,9 @@ export const useGroupStore = create<GroupState>((set, get) => ({
 
   fetchGroupMembers: async (groupId: string) => {
     try {
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(groupId);
+      if (!isUUID) return;
+
       const { data, error } = await (supabase as any)
         .from('group_members')
         .select(`

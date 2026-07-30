@@ -95,21 +95,6 @@ export const useFeedStore = create<FeedState>((set, get) => ({
     const updated = [newItem, ...get().feedItems];
     set({ feedItems: updated });
     saveFeedCache(updated);
-
-    // Persist to Supabase Database
-    try {
-      await (supabase as any).from('drops').insert({
-        id: dropId,
-        user_id: newItem.user_id,
-        bristol_scale: newItem.bristol_scale,
-        intensity: newItem.size_badge === 'Massive' ? 'HEAVY_ARTILLERY' : newItem.size_badge === 'Large' ? 'HEAVY_ARTILLERY' : 'NORMAL',
-        custom_title: newItem.custom_title,
-        privacy_level: newItem.privacy_level.toUpperCase() === 'PRIVATE' ? 'PRIVATE' : 'FRIENDS',
-        created_at: newItem.created_at,
-      });
-    } catch (e) {
-      console.warn('Database insert sync info:', e);
-    }
   },
 
   fetchFeed: async () => {
@@ -125,7 +110,7 @@ export const useFeedStore = create<FeedState>((set, get) => ({
           privacy_level,
           created_at,
           custom_title,
-          profiles:user_id ( username, avatar_url )
+          profiles:user_id ( username, display_name, avatar_url )
         `)
         .order('created_at', { ascending: false })
         .limit(30);
@@ -145,7 +130,7 @@ export const useFeedStore = create<FeedState>((set, get) => ({
           created_at: item.created_at || new Date().toISOString(),
           custom_title: item.custom_title || 'Community Drop',
           profiles: {
-            username: item.profiles?.username || 'User',
+            username: item.profiles?.display_name || item.profiles?.username || 'User',
             avatar_url: item.profiles?.avatar_url || null,
           },
           reactions: {},

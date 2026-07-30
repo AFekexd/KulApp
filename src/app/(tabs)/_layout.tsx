@@ -2,10 +2,10 @@
  * Tabs Layout — PoopTracker
  * High-fidelity, floating glassmorphism tab bar with a prominent FAB.
  */
-import { Tabs, useRouter } from 'expo-router';
-import { Text, View, StyleSheet, Platform, TouchableOpacity } from 'react-native';
-import { Home, Rss, Trophy, User, Users } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
+import { Tabs, useRouter } from 'expo-router';
+import { Home, Rss, User, Users } from 'lucide-react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const DESIGN_COLORS = {
   background: '#2D1B15',
@@ -20,23 +20,19 @@ const DESIGN_COLORS = {
   border: '#5D4037',
 };
 
+
+
 export default function TabLayout() {
   const router = useRouter();
-
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
           position: 'absolute',
-          bottom: 24,
-          alignSelf: 'center',
-          width: '90%',
-          maxWidth: 400,
-          ...(Platform.OS === 'web' && {
-            left: '50%',
-            transform: [{ translateX: '-50%' as any }],
-          }),
+          bottom: 0,
+          left: '0%',
+          right: '0%',
           borderRadius: 40,
           height: 72,
           borderTopWidth: 0,
@@ -51,7 +47,7 @@ export default function TabLayout() {
               shadowRadius: 20,
             },
             android: { elevation: 12 },
-            web: { 
+            web: {
               boxShadow: '0 10px 20px rgba(26, 14, 11, 0.15)',
               backdropFilter: 'blur(24px)',
             },
@@ -66,6 +62,7 @@ export default function TabLayout() {
         sceneStyle: { backgroundColor: DESIGN_COLORS.background },
       }}
     >
+
       {/* 1. HOME TAB */}
       <Tabs.Screen
         name="index"
@@ -164,6 +161,7 @@ export default function TabLayout() {
           href: null,
         }}
       />
+
     </Tabs>
   );
 }
@@ -218,6 +216,13 @@ const styles = StyleSheet.create({
       web: { boxShadow: '0 0 16px rgba(169, 92, 51, 0.6)' },
     }),
   },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000'
+  },
+
   centerBtnPlus: {
     fontSize: 28,
     fontFamily: 'Nunito-ExtraBold',

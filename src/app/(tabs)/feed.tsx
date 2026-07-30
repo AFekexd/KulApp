@@ -17,6 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFeedStore, FeedItem } from '@/stores/feedStore';
 import { Search, MapPin, Globe, Users, Home, Lock, ThumbsUp, Radio } from 'lucide-react-native';
+import PageTransition from '@/components/PageTransition';
+import { Image } from 'expo-image';
 
 const DESIGN_COLORS = {
   background: '#2D1B15',
@@ -32,17 +34,17 @@ const DESIGN_COLORS = {
 const getSizeBadgeStyle = (size: string) => {
   switch (size) {
     case 'Tiny':
-      return { bg: '#E5F1FF', text: '#0066CC' };
+      return { bg: 'rgba(0, 102, 204, 0.15)', text: '#66B2FF' };
     case 'Small':
-      return { bg: '#E6F4EA', text: '#137333' };
+      return { bg: 'rgba(19, 115, 51, 0.15)', text: '#81C995' };
     case 'Medium':
-      return { bg: '#FFF8E1', text: '#B78103' };
+      return { bg: 'rgba(183, 129, 3, 0.15)', text: '#FDE293' };
     case 'Large':
-      return { bg: '#FCE8E6', text: '#C5221F' };
+      return { bg: 'rgba(197, 34, 31, 0.15)', text: '#F28B82' };
     case 'Massive':
-      return { bg: '#F3E8FD', text: '#7B1FA2' };
+      return { bg: 'rgba(123, 31, 162, 0.15)', text: '#D7A1F9' };
     default:
-      return { bg: '#FFF8E1', text: '#B78103' };
+      return { bg: 'rgba(183, 129, 3, 0.15)', text: '#FDE293' };
   }
 };
 
@@ -77,6 +79,7 @@ export default function FeedScreen() {
   };
 
   return (
+    <PageTransition>
     <View style={styles.screenOuter}>
       <SafeAreaView style={styles.container} edges={['top']}>
         <ScrollView
@@ -156,10 +159,14 @@ export default function FeedScreen() {
                   <View key={report.id} style={styles.reportCard}>
                     <View style={styles.cardTopRow}>
                       <View style={styles.authorGroup}>
-                        <View style={styles.avatarCircle}>
-                          <Text style={styles.avatarText}>
-                            {report.profiles.username.slice(0, 2).toUpperCase()}
-                          </Text>
+                        <View style={[styles.avatarCircle, !report.profiles?.avatar_url && { backgroundColor: '#5D4037' }]}>
+                          {report.profiles?.avatar_url ? (
+                            <Image source={{ uri: report.profiles.avatar_url }} style={styles.avatarImage} contentFit="cover" />
+                          ) : (
+                            <Text style={styles.avatarText}>
+                              {report.profiles.username.slice(0, 2).toUpperCase()}
+                            </Text>
+                          )}
                         </View>
                         <View>
                           <Text style={styles.username}>{report.profiles.username}</Text>
@@ -219,6 +226,7 @@ export default function FeedScreen() {
         </ScrollView>
       </SafeAreaView>
     </View>
+    </PageTransition>
   );
 }
 
@@ -312,20 +320,20 @@ const styles = StyleSheet.create({
   },
   reportCard: {
     backgroundColor: DESIGN_COLORS.card,
-    borderRadius: 22,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: DESIGN_COLORS.border,
-    padding: 16,
-    gap: 12,
+    padding: 20,
+    gap: 16,
     ...Platform.select({
       ios: {
         shadowColor: '#1A0E0B',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
       },
-      android: { elevation: 2 },
-      web: { boxShadow: '0 2px 8px rgba(26, 14, 11, 0.2)' },
+      android: { elevation: 3 },
+      web: { boxShadow: '0 6px 16px rgba(26, 14, 11, 0.4)' },
     }),
   },
   cardTopRow: {
@@ -336,24 +344,31 @@ const styles = StyleSheet.create({
   authorGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
   avatarCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#4E342E',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 22,
   },
   avatarText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontSize: 16,
+    fontFamily: 'Nunito-ExtraBold',
     color: '#EFEBE9',
   },
   username: {
-    fontSize: 14,
-    fontFamily: 'Inter-Bold',
+    fontSize: 15,
+    fontFamily: 'Nunito-ExtraBold',
     color: DESIGN_COLORS.textPrimary,
   },
   timeAgo: {
@@ -412,20 +427,20 @@ const styles = StyleSheet.create({
   upvoteBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#2D1B15',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   upvoteBtnActive: {
-    backgroundColor: '#4E342E',
+    backgroundColor: 'rgba(169, 92, 51, 0.15)',
     borderColor: DESIGN_COLORS.primary,
   },
   upvoteLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textSecondary,
   },

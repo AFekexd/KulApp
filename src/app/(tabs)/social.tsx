@@ -21,7 +21,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Users, UserPlus, Search, Home, Copy, LogOut, ChevronRight, Hash, Crown, UserCheck } from 'lucide-react-native';
 import { useFriendshipStore } from '@/stores/friendshipStore';
 import { useGroupStore } from '@/stores/groupStore';
+import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
+import PageTransition from '@/components/PageTransition';
+import { Image } from 'expo-image';
 
 const C = {
   bg: '#F7F7F5',
@@ -41,7 +44,17 @@ const C = {
 
 type Tab = 'friends' | 'groups';
 
+const stringToColor = (str: string) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const color = Math.floor(Math.abs((Math.sin(hash) * 10000) % 1 * 16777215)).toString(16);
+  return '#' + '000000'.substring(0, 6 - color.length) + color;
+};
+
 export default function SocialScreen() {
+  const router = useRouter();
   const { friends, pendingRequests, fetchFriends, sendFriendRequest, acceptFriendRequest, removeFriend, isLoading: friendsLoading } = useFriendshipStore();
   const { groups, fetchUserGroups, createGroup, joinGroup, leaveGroup, fetchGroupMembers, members, isLoading: groupsLoading } = useGroupStore();
 
@@ -150,6 +163,7 @@ export default function SocialScreen() {
   };
 
   return (
+    <PageTransition>
     <View style={styles.screen}>
       <SafeAreaView style={styles.safe} edges={['top']}>
         <ScrollView
@@ -240,12 +254,22 @@ export default function SocialScreen() {
                   </Text>
                   {pendingRequests.map((req) => (
                     <View key={req.id} style={styles.friendRow}>
-                      <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>?</Text>
+                      <View style={[styles.avatar, !req.friend_profile?.avatar_url && { backgroundColor: stringToColor(req.friend_profile?.username || req.id) }]}>
+                        {req.friend_profile?.avatar_url ? (
+                          <Image source={{ uri: req.friend_profile.avatar_url }} style={styles.avatarImage} contentFit="cover" />
+                        ) : (
+                          <Text style={styles.avatarText}>
+                            {(req.friend_profile?.display_name || req.friend_profile?.username || '?').charAt(0).toUpperCase()}
+                          </Text>
+                        )}
                       </View>
                       <View style={styles.friendInfo}>
-                        <Text style={styles.friendName}>Incoming Request</Text>
-                        <Text style={styles.friendSub}>Waiting for your response</Text>
+                        <Text style={styles.friendName}>
+                          {req.friend_profile?.display_name || req.friend_profile?.username || 'Incoming Request'}
+                        </Text>
+                        <Text style={styles.friendSub}>
+                          {req.friend_profile?.username ? `@${req.friend_profile.username}` : 'Waiting for your response'}
+                        </Text>
                       </View>
                       <TouchableOpacity
                         style={styles.acceptBtn}
@@ -270,11 +294,20 @@ export default function SocialScreen() {
                   </View>
                 ) : friends.length > 0 ? (
                   friends.map((friend) => (
-                    <View key={friend.id} style={styles.friendRow}>
-                      <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>
-                          {(friend.display_name || friend.username || '?').charAt(0).toUpperCase()}
-                        </Text>
+                    <TouchableOpacity
+                      key={friend.id}
+                      style={styles.friendRow}
+                      activeOpacity={0.7}
+                      onPress={() => router.push(`/(modals)/friend-profile?id=${friend.id}`)}
+                    >
+                      <View style={[styles.avatar, !friend.avatar_url && { backgroundColor: stringToColor(friend.username || friend.id) }]}>
+                        {friend.avatar_url ? (
+                          <Image source={{ uri: friend.avatar_url }} style={styles.avatarImage} contentFit="cover" />
+                        ) : (
+                          <Text style={styles.avatarText}>
+                            {(friend.display_name || friend.username || '?').charAt(0).toUpperCase()}
+                          </Text>
+                        )}
                       </View>
                       <View style={styles.friendInfo}>
                         <Text style={styles.friendName}>
@@ -287,13 +320,16 @@ export default function SocialScreen() {
                           <Text style={styles.streakText}>🔥 {friend.streak_days || 0}</Text>
                         </View>
                         <TouchableOpacity
-                          onPress={() => handleRemoveFriend(friend.id, friend.username)}
-                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          style={styles.nudgeBtnSmall}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            Alert.alert('Poke Sent!', `You poked @${friend.username} with a 🪠!`);
+                          }}
                         >
-                          <Text style={styles.removeText}>Remove</Text>
+                          <Text style={styles.nudgeBtnSmallText}>🪠</Text>
                         </TouchableOpacity>
                       </View>
-                    </View>
+                    </TouchableOpacity>
                   ))
                 ) : (
                   <View style={styles.emptyState}>
@@ -421,10 +457,14 @@ export default function SocialScreen() {
                           {(members[group.id] || []).length > 0 ? (
                             (members[group.id] || []).map((member) => (
                               <View key={member.id} style={styles.memberRow}>
-                                <View style={styles.memberAvatar}>
-                                  <Text style={styles.memberAvatarText}>
-                                    {(member.username || '?').charAt(0).toUpperCase()}
-                                  </Text>
+                                <View style={[styles.memberAvatar, !member.avatar_url && { backgroundColor: stringToColor(member.username || member.id) }]}>
+                                  {member.avatar_url ? (
+                                    <Image source={{ uri: member.avatar_url }} style={styles.memberAvatarImage} contentFit="cover" />
+                                  ) : (
+                                    <Text style={styles.memberAvatarText}>
+                                      {(member.display_name || member.username || '?').charAt(0).toUpperCase()}
+                                    </Text>
+                                  )}
                                 </View>
                                 <Text style={styles.memberName}>
                                   {member.display_name || member.username}
@@ -468,6 +508,7 @@ export default function SocialScreen() {
         </ScrollView>
       </SafeAreaView>
     </View>
+    </PageTransition>
   );
 }
 
@@ -609,6 +650,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 14,
     color: C.textPrimary,
+    ...Platform.select({
+      web: { outlineStyle: 'none' } as any,
+    }),
   },
   codeInput: {
     fontWeight: '800',
@@ -677,6 +721,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  avatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
   avatarText: {
     fontSize: 16,
     fontWeight: '800',
@@ -715,6 +764,17 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: C.danger,
+  },
+  nudgeBtnSmall: {
+    backgroundColor: C.primary,
+    borderRadius: 20,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nudgeBtnSmallText: {
+    fontSize: 12,
   },
   acceptBtn: {
     flexDirection: 'row',
@@ -802,6 +862,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: C.border,
+  },
+  memberAvatarImage: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
   },
   memberAvatarText: {
     fontSize: 11,
