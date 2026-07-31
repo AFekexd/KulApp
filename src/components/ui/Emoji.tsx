@@ -13,6 +13,16 @@ interface EmojiProps {
 export const Emoji: React.FC<EmojiProps> = ({ symbol, size = 24, style }) => {
   if (!symbol) return null;
 
+  if (symbol === '💩') {
+    return (
+      <Image 
+        source={require('../../../assets/images/pile_of_poo_3d.png')} 
+        style={[{ width: size, height: size }, style]} 
+        resizeMode="contain"
+      />
+    );
+  }
+
   // Convert emoji to Twemoji compatible code point
   const codePoint = Array.from(symbol)
     .map(c => c.codePointAt(0)?.toString(16))

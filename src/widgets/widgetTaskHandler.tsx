@@ -5,6 +5,7 @@ import { DashboardWidget } from './DashboardWidget';
 import { storage } from '@/lib/mmkv';
 
 import { StreakWidget } from './StreakWidget';
+import { VsWidget } from './VsWidget';
 
 const KEYS = {
   TODAY_COUNT: 'kulapp:today_count',
@@ -33,10 +34,18 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
         todayCount={todayCount}
         streak={streak}
         xp={1245 + todayCount * 50}
-        rank="#17"
+        rank="#1"
       />
     );
   } else if (widgetInfo.widgetName === 'Streak') {
     renderWidget(<StreakWidget streak={streak} />);
+  } else if (widgetInfo.widgetName === 'VsWidget') {
+    renderWidget(
+      <VsWidget 
+        userCount={todayCount} 
+        friendCount={2} // Placeholder for demo
+        friendName="Rival" // Placeholder for demo
+      />
+    );
   }
 }

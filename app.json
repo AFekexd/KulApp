@@ -73,6 +73,16 @@
               "targetCellHeight": 1,
               "description": "Keep your streak alive",
               "previewImage": "./assets/images/icon.png"
+            },
+            {
+              "name": "VsWidget",
+              "label": "KulApp VS (2x1)",
+              "minWidth": "140dp",
+              "minHeight": "60dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 1,
+              "description": "Compare daily drops with a friend",
+              "previewImage": "./assets/images/icon.png"
             }
           ]
         }

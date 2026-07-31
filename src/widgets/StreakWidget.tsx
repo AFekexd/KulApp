@@ -16,7 +16,7 @@ export function StreakWidget({ streak }: StreakWidgetProps) {
         borderRadius: 24,
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 16,
+        padding: 8,
       }}
       clickAction="OPEN_APP"
     >

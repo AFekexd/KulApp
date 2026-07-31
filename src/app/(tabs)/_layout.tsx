@@ -62,6 +62,7 @@ export default function TabLayout() {
           ) : undefined
         ),
         tabBarShowLabel: false,
+        tabBarItemStyle: { paddingVertical: 0, justifyContent: 'center' },
         sceneStyle: { backgroundColor: DESIGN_COLORS.background },
       }}
     >
@@ -96,7 +97,7 @@ export default function TabLayout() {
                 color={focused ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary}
                 style={[styles.tabIcon, focused && styles.activeTabIcon]}
               />
-              <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>Reports</Text>
+              <Text style={[styles.tabLabel, focused && styles.activeTabLabel]} numberOfLines={1}>Feed</Text>
             </View>
           ),
         }}
@@ -171,10 +172,11 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabItem: {
+    flex: 1,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    marginTop: 12, // Pushes the normal tabs down to center them vertically
   },
   tabIcon: {
     opacity: 0.6,
@@ -197,7 +199,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8, // Pushes the + button up to align with the tabs
   },
   centerBtnCircle: {
     width: 54,

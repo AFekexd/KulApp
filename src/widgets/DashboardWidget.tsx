@@ -20,7 +20,7 @@ export function DashboardWidget({ todayCount, streak, xp, rank }: DashboardWidge
         width: 'match_parent',
         backgroundColor: '#1E1E1E', // Dark mode premium
         borderRadius: 24,
-        padding: 16,
+        padding: 10,
         justifyContent: 'space-between',
       }}
     >
@@ -61,7 +61,7 @@ export function DashboardWidget({ todayCount, streak, xp, rank }: DashboardWidge
           <TextWidget
             text={rank || '#17'}
             style={{
-              fontSize: 12,
+              fontSize: 10,
               fontWeight: 'bold',
               color: '#F5A623',
             }}
@@ -77,15 +77,15 @@ export function DashboardWidget({ todayCount, streak, xp, rank }: DashboardWidge
           alignItems: 'center',
           backgroundColor: '#2A2A2A',
           borderRadius: 16,
-          padding: 12,
-          marginVertical: 6,
+          padding: 8,
+          marginVertical: 4,
         }}
       >
-        <FlexWidget style={{ alignItems: 'center' }}>
+        <FlexWidget style={{ flex: 1, alignItems: 'center' }}>
           <TextWidget
             text={`${todayCount}`}
             style={{
-              fontSize: 22,
+              fontSize: 18,
               fontWeight: 'bold',
               color: '#FFFFFF',
             }}
@@ -108,11 +108,11 @@ export function DashboardWidget({ todayCount, streak, xp, rank }: DashboardWidge
           }}
         />
 
-        <FlexWidget style={{ alignItems: 'center' }}>
+        <FlexWidget style={{ flex: 1, alignItems: 'center' }}>
           <TextWidget
             text={`${xp || 1245}`}
             style={{
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: 'bold',
               color: '#F5A623',
             }}
@@ -132,8 +132,8 @@ export function DashboardWidget({ todayCount, streak, xp, rank }: DashboardWidge
       <FlexWidget
         style={{
           backgroundColor: '#7C4D2E',
-          borderRadius: 14,
-          padding: 12,
+          borderRadius: 12,
+          padding: 8,
           alignItems: 'center',
           justifyContent: 'center',
           width: 'match_parent',
