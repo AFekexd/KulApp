@@ -130,6 +130,21 @@ export default function FriendProfileModal() {
             {/* Actions */}
             <View style={styles.actionsContainer}>
               <TouchableOpacity 
+                style={styles.vsBtn} 
+                activeOpacity={0.8}
+                onPress={() => router.push(`/(modals)/friend-vs?id=${friendId}`)}
+              >
+                <LinearGradient
+                  colors={['#FFD700', '#F57F17']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.vsBtnGradient}
+                >
+                  <Text style={styles.vsBtnText}>⚔️ Head-to-Head (VS)</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
                 style={styles.primaryBtn} 
                 activeOpacity={0.8}
                 onPress={() => alert('Poke sent! 🪠')}
@@ -280,6 +295,31 @@ const styles = StyleSheet.create({
   actionsContainer: {
     width: '100%',
     gap: 16,
+  },
+  vsBtn: {
+    width: '100%',
+    height: 56,
+    borderRadius: 28,
+    overflow: 'hidden',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  vsBtnGradient: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  vsBtnText: {
+    fontSize: 17,
+    fontFamily: 'Inter-Bold',
+    color: '#3E2723',
+    textShadowColor: 'rgba(255,255,255,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   primaryBtn: {
     width: '100%',

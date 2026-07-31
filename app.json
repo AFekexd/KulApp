@@ -63,6 +63,16 @@
               "targetCellHeight": 2,
               "description": "Live Throne Streak & Daily Count",
               "previewImage": "./assets/images/icon.png"
+            },
+            {
+              "name": "Streak",
+              "label": "KulApp Streak (2x1)",
+              "minWidth": "140dp",
+              "minHeight": "60dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 1,
+              "description": "Keep your streak alive",
+              "previewImage": "./assets/images/icon.png"
             }
           ]
         }

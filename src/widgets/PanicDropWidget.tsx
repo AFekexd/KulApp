@@ -1,3 +1,4 @@
+"use no memo";
 import React from 'react';
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
 
@@ -15,7 +16,7 @@ export function PanicDropWidget({ todayCount = 0 }: QuickDropWidgetProps) {
       style={{
         height: 'match_parent',
         width: 'match_parent',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#7C4D2E',
         borderRadius: 24,
         alignItems: 'center',
         justifyContent: 'center',
@@ -28,7 +29,7 @@ export function PanicDropWidget({ todayCount = 0 }: QuickDropWidgetProps) {
           width: 56,
           height: 56,
           borderRadius: 28,
-          backgroundColor: '#7C4D2E',
+          backgroundColor: '#FFFFFF',
           alignItems: 'center',
           justifyContent: 'center',
         }}
@@ -36,18 +37,19 @@ export function PanicDropWidget({ todayCount = 0 }: QuickDropWidgetProps) {
         <TextWidget
           text="💩"
           style={{
-            fontSize: 28,
+            fontSize: 32,
           }}
         />
       </FlexWidget>
 
       <TextWidget
-        text="Quick Drop"
+        text="QUICK DROP"
         style={{
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: 'bold',
-          color: '#1B1B1B',
-          marginTop: 6,
+          color: '#FFFFFF',
+          marginTop: 8,
+          letterSpacing: 1.2,
         }}
       />
     </FlexWidget>

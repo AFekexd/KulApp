@@ -1,5 +1,5 @@
 /**
- * Auth Layout — PoopTracker
+ * Auth Layout — KulAPP
  * Light mode, #F7F7F5 background.
  */
 import { Stack } from 'expo-router';

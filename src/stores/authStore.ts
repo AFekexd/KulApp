@@ -73,7 +73,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   profile: loadLocalProfile() || DEFAULT_PROFILE,
   isLoading: true,
   isInitialized: false,
-  isAuthenticated: true,
+  isAuthenticated: false,
   isGuest: false,
 
   initialize: async () => {
@@ -84,7 +84,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const localProf = loadLocalProfile();
       set({ 
         session, 
-        isAuthenticated: true,
+        isAuthenticated: !!session,
         isLoading: false,
         isInitialized: true,
         profile: localProf || get().profile,
@@ -97,7 +97,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       supabase.auth.onAuthStateChange(async (_event, newSession) => {
         set({ 
           session: newSession, 
-          isAuthenticated: true,
+          isAuthenticated: !!newSession,
           isGuest: false,
         });
         
@@ -198,7 +198,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // ... existing signInWithGoogle implementation
     try {
       const redirectUrl = makeRedirectUri({
-        path: '/auth/callback',
+        scheme: 'kulapp',
+        path: 'auth/callback',
       });
 
       const { data, error } = await supabase.auth.signInWithOAuth({

@@ -40,6 +40,7 @@ const KEYS = {
   TODAY_DATE: 'kulapp:today_date',
   STREAK: 'kulapp:streak',
   LAST_DROP: 'kulapp:last_drop_time',
+  DROPS: 'kulapp:drops',
 } as const;
 
 // ============================================================================
@@ -82,6 +83,7 @@ export const useDropStore = create<DropState>((set, get) => ({
   loadLocalState: () => {
     try {
       const pendingStr = storage.getString(KEYS.PENDING_SYNC);
+      const dropsStr = storage.getString(KEYS.DROPS);
       const todayDate = storage.getString(KEYS.TODAY_DATE);
       const todayCount = storage.getNumber(KEYS.TODAY_COUNT);
       const streak = storage.getNumber(KEYS.STREAK);
@@ -91,6 +93,7 @@ export const useDropStore = create<DropState>((set, get) => ({
 
       set({
         pendingSync: pendingStr ? JSON.parse(pendingStr) : [],
+        drops: dropsStr ? JSON.parse(dropsStr) : [],
         todayCount: isToday ? (todayCount ?? 0) : 0,
         currentStreak: streak ?? 0,
       });
@@ -177,6 +180,7 @@ export const useDropStore = create<DropState>((set, get) => ({
 
         // Persist to MMKV
         storage.set(KEYS.PENDING_SYNC, JSON.stringify(updatedPending));
+        storage.set(KEYS.DROPS, JSON.stringify(newDrops));
         storage.set(KEYS.TODAY_COUNT, newTodayCount);
         storage.set(KEYS.TODAY_DATE, getTodayString());
         storage.set(KEYS.STREAK, newStreak);
@@ -242,6 +246,11 @@ export const useDropStore = create<DropState>((set, get) => ({
    * Fetch user's drops from Supabase.
    */
   fetchUserDrops: async (userId: string, limit = 50) => {
+    // Guard: Prevent querying Supabase with invalid UUIDs from local/guest profiles
+    if (!userId || userId === 'user-me' || userId.startsWith('user-') || userId.startsWith('guest-')) {
+      return;
+    }
+
     try {
       const { data, error } = await (supabase as any)
         .from('drops')
@@ -265,6 +274,7 @@ export const useDropStore = create<DropState>((set, get) => ({
         });
 
         // Persist
+        storage.set(KEYS.DROPS, JSON.stringify(data));
         storage.set(KEYS.STREAK, streak);
         storage.set(KEYS.TODAY_COUNT, todayDrops.length);
         storage.set(KEYS.TODAY_DATE, getTodayString());
@@ -285,8 +295,9 @@ export const useDropStore = create<DropState>((set, get) => ({
     }));
 
     // Update MMKV
-    const { pendingSync } = get();
+    const { pendingSync, drops } = get();
     storage.set(KEYS.PENDING_SYNC, JSON.stringify(pendingSync));
+    storage.set(KEYS.DROPS, JSON.stringify(drops));
 
     try {
       const { error } = await supabase

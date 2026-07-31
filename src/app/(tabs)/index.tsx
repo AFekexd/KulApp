@@ -1,28 +1,27 @@
 /**
- * Home Screen — PoopTracker
+ * Home Screen — KulAPP
  * Designed like an experienced Figma product designer built it for native iOS 18.
  * Minimal, clean, playful, light mode, 8pt spacing system, flat design.
  * Fully interactive and state-reactive with clean empty states.
  */
+import PageTransition from '@/components/PageTransition';
+import { useAuthStore } from '@/stores/authStore';
+import { useDropStore } from '@/stores/dropStore';
+import { useFeedStore } from '@/stores/feedStore';
+import { useLeaderboardStore } from '@/stores/leaderboardStore';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  Platform, 
-  Modal, 
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
   TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useLeaderboardStore, LeaderboardUser } from '@/stores/leaderboardStore';
-import { useFeedStore, FeedItem } from '@/stores/feedStore';
-import { useDropStore } from '@/stores/dropStore';
-import { useAuthStore } from '@/stores/authStore';
-import PageTransition from '@/components/PageTransition';
-import { Image } from 'expo-image';
+import { Emoji } from '@/components/ui/Emoji';
 
 const DESIGN_COLORS = {
   background: '#F7F7F5',
@@ -52,6 +51,15 @@ const getSizeBadgeStyle = (size: string) => {
   }
 };
 
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming
+} from 'react-native-reanimated';
+
 export default function HomeScreen() {
   const router = useRouter();
   const { topUsers, fetchLeaderboard } = useLeaderboardStore();
@@ -63,11 +71,44 @@ export default function HomeScreen() {
   const userHandle = profile?.username || 'user';
   const userInitials = userDisplayName.slice(0, 2).toUpperCase();
 
+  // Animation values
+  const floatValue = useSharedValue(0);
+  const scaleValue = useSharedValue(1);
+
   React.useEffect(() => {
     fetchFeed();
     fetchLeaderboard();
     loadLocalState();
+
+    // Start continuous floating animation
+    floatValue.value = withRepeat(
+      withSequence(
+        withTiming(-15, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0, { duration: 1500, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1, // Infinite
+      true // Reverse
+    );
+
+    // Start a subtle breathing/scaling animation
+    scaleValue.value = withRepeat(
+      withSequence(
+        withTiming(1.05, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      true
+    );
   }, []);
+
+  const animatedPetStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateY: floatValue.value },
+        { scale: scaleValue.value }
+      ],
+    };
+  });
 
   const [notificationVisible, setNotificationVisible] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(false);
@@ -92,66 +133,110 @@ export default function HomeScreen() {
 
   return (
     <PageTransition>
-      <LinearGradient colors={['#2D1B15', '#3E2723']} style={styles.screenOuter}>
-        <SafeAreaView style={styles.container} edges={['top']}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+      <View style={styles.screenOuter}>
+        {/* Animated Background */}
+        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: '#2D1B15' }]} />
+
+        {/* Floating Background Particles */}
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            { opacity: 0.1, transform: [{ scale: 1.5 }] },
+            useAnimatedStyle(() => ({
+              transform: [
+                { translateY: floatValue.value * 2 },
+                { rotate: `${floatValue.value * 0.5}deg` }
+              ]
+            }))
+          ]}
         >
-          {/* FLOATING HEADER */}
-          <View style={styles.floatingHeader}>
-            <View style={styles.floatingTitleGroup}>
-              <Text style={styles.appTitle}>💩 PoopTracker</Text>
-              <Text style={styles.appSubtitle}>Ready to drop one?</Text>
+          <Emoji symbol="💨" size={40} style={{ position: 'absolute', top: '10%', left: '10%' }} />
+          <Emoji symbol="🧻" size={60} style={{ position: 'absolute', top: '30%', right: '20%' }} />
+          <Emoji symbol="💩" size={50} style={{ position: 'absolute', top: '60%', left: '15%' }} />
+          <Emoji symbol="🚽" size={80} style={{ position: 'absolute', bottom: '15%', right: '10%' }} />
+        </Animated.View>
+
+        <SafeAreaView style={styles.container} edges={['top']}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* FLOATING HEADER */}
+            <View style={styles.floatingHeader}>
+              <View style={styles.floatingTitleGroup}>
+                <Text style={styles.appTitle}>💩 KulAPP</Text>
+                <Text style={styles.appSubtitle}>Ready to drop one?</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.floatingProfileBtn}
+                onPress={() => router.push('/profile')}
+              >
+                <Emoji symbol="🧻" size={22} />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity 
-              style={styles.floatingProfileBtn} 
-              onPress={() => router.push('/profile')}
-            >
-              <Text style={{fontSize: 22}}>🧻</Text>
-            </TouchableOpacity>
-          </View>
 
             {/* WIDGET GRID (2-COLUMN) */}
             <View style={styles.widgetGrid}>
-              
+
               {/* WIDGET 1: 1x1 Square Stats */}
               <View style={[styles.widget1x1, styles.widgetBrown, styles.shadowBrown, styles.whiteBorder]}>
-                <Text style={styles.widgetEmoji}>{todayCount > 0 ? '💩' : '🚽'}</Text>
+                <Emoji symbol={todayCount > 0 ? '💩' : '🚽'} size={54} style={{ marginBottom: 8 }} />
                 <Text style={[styles.widgetNumber, styles.whiteText]}>{todayCount}</Text>
                 <Text style={[styles.widgetLabel, styles.whiteText]}>Drops Today</Text>
               </View>
 
               {/* WIDGET 2: 1x1 Square Rank */}
               <View style={[styles.widget1x1, styles.widgetOlive, styles.shadowOlive, styles.whiteBorder]}>
-                <Text style={styles.widgetEmoji}>🏅</Text>
+                <Emoji symbol="🏅" size={54} style={{ marginBottom: 8 }} />
                 <Text style={[styles.widgetNumber, styles.whiteText]}>{totalLoggedCount > 0 ? '#1' : '-'}</Text>
                 <Text style={[styles.widgetLabel, styles.whiteText]}>Local Rank</Text>
               </View>
 
               {/* WIDGET 3: 2x2 Large Pet Centerpiece */}
-              <View style={[styles.widget2x2, styles.shadowSoft, styles.whiteBorder, { backgroundColor: '#3E2723' }]}>
+              <View style={[styles.widget2x2, styles.shadowSoft, styles.whiteBorder, { backgroundColor: '#3E2723', overflow: 'hidden' }]}>
                 <View style={styles.levelWidgetHeader}>
                   <Text style={[styles.widgetTitle, { color: '#EFEBE9' }]}>Your Log</Text>
                   <View style={styles.levelPill}>
                     <Text style={[styles.levelPillText, { color: '#EFEBE9' }]}>Lvl {currentLevel}</Text>
                   </View>
                 </View>
-                
-                <View style={styles.petContainer}>
-                  <Text style={styles.petEmoji}>{currentLevel < 2 ? '💩' : (currentLevel < 4 ? '💩💩' : '💩💩💩')}</Text>
-                </View>
+
+                <Animated.View style={[styles.petContainer, animatedPetStyle]}>
+                  <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
+                    <Emoji symbol="💩" size={140} style={{
+                      ...Platform.select({
+                        ios: { shadowColor: 'rgba(0,0,0,0.1)', shadowOffset: { width: 0, height: 10 }, shadowRadius: 10, shadowOpacity: 1 },
+                        web: { filter: 'drop-shadow(0px 10px 10px rgba(0,0,0,0.1))' } as any,
+                      })
+                    }} />
+
+                    {/* Level 2: Sunglasses */}
+                    {currentLevel === 2 && (
+                      <Emoji symbol="🕶️" size={130} style={{ position: 'absolute', top: '15%', zIndex: 10 }} />
+                    )}
+
+                    {/* Level 3: Top Hat */}
+                    {currentLevel === 3 && (
+                      <Emoji symbol="🎩" size={75} style={{ position: 'absolute', top: '-10%', left: '10%', zIndex: 10, transform: [{ rotate: '-15deg' }] }} />
+                    )}
+
+                    {/* Level 4+: Crown (or Troll hair) */}
+                    {currentLevel >= 4 && (
+                      <Emoji symbol="👑" size={80} style={{ position: 'absolute', top: '-6%', zIndex: 10 }} />
+                    )}
+                  </View>
+                </Animated.View>
 
                 {/* Interactive Action Buttons */}
                 <View style={styles.actionRow}>
                   <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#5D4037' }, styles.whiteBorder]}>
-                    <Text style={{fontSize: 20}}>🌽</Text>
+                    <Emoji symbol="🌽" size={20} />
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#4E342E' }, styles.whiteBorder]}>
-                    <Text style={{fontSize: 20}}>🥜</Text>
+                    <Emoji symbol="🥜" size={20} />
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#6D4C41' }, styles.whiteBorder]}>
-                    <Text style={{fontSize: 20}}>🪠</Text>
+                    <Emoji symbol="🪠" size={20} />
                   </TouchableOpacity>
                 </View>
 
@@ -164,7 +249,7 @@ export default function HomeScreen() {
               {/* WIDGET 4: 2x1 Medium Recent Feed */}
               <View style={[styles.widget2x1, styles.shadowSoft, styles.whiteBorder, { backgroundColor: '#3E2723' }]}>
                 <Text style={styles.widgetTitle}>Recent Logs 💩</Text>
-                
+
                 <View style={styles.feedList}>
                   {feedItems.slice(0, 2).map((item) => (
                     <View key={item.id} style={[styles.feedMiniCard]}>
@@ -179,21 +264,21 @@ export default function HomeScreen() {
                         <Text style={styles.feedUserName}>{item.profiles.username}</Text>
                         <Text style={styles.feedTime}>{formatTimeAgo(item.created_at)}</Text>
                       </View>
-                      <Text style={{fontSize: 18}}>💨</Text>
+                      <Emoji symbol="💨" size={18} />
                     </View>
                   ))}
                   {feedItems.length === 0 && (
-                     <Text style={styles.emptySub}>No recent activity</Text>
+                    <Text style={styles.emptySub}>No recent activity</Text>
                   )}
                 </View>
               </View>
 
             </View>
 
-          <View style={{ height: 100 }} />
-        </ScrollView>
-      </SafeAreaView>
-    </LinearGradient>
+            <View style={{ height: 100 }} />
+          </ScrollView>
+        </SafeAreaView>
+      </View>
     </PageTransition>
   );
 }
@@ -266,7 +351,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 16,
   },
-  
+
   whiteBorder: {
     borderWidth: 4,
     borderColor: 'rgba(93, 64, 55, 0.5)',
@@ -274,7 +359,7 @@ const styles = StyleSheet.create({
   whiteText: {
     color: '#EFEBE9',
   },
-  
+
   // 1x1 SQUARE WIDGET
   widget1x1: {
     width: '47%',
@@ -290,7 +375,7 @@ const styles = StyleSheet.create({
   widgetOlive: {
     backgroundColor: '#556B2F', // Solid olive green
   },
-  
+
   // 2x1 WIDGET
   widget2x1: {
     width: '100%',
@@ -335,7 +420,7 @@ const styles = StyleSheet.create({
     color: '#EFEBE9',
   },
   levelPill: {
-    backgroundColor: '#5D4037', 
+    backgroundColor: '#5D4037',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -351,7 +436,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   petEmoji: {
-    fontSize: 140, 
+    fontSize: 140,
     ...Platform.select({
       ios: {
         textShadowColor: 'rgba(0,0,0,0.1)',
@@ -361,7 +446,7 @@ const styles = StyleSheet.create({
       web: { textShadow: '0px 10px 10px rgba(0,0,0,0.1)' },
     }),
   },
-  
+
   // INTERACTIVE ACTIONS
   actionRow: {
     flexDirection: 'row',

@@ -1,11 +1,12 @@
 /**
- * Tabs Layout — PoopTracker
+ * Tabs Layout — KulAPP
  * High-fidelity, floating glassmorphism tab bar with a prominent FAB.
  */
 import { BlurView } from 'expo-blur';
 import { Tabs, useRouter } from 'expo-router';
 import { Home, Rss, User, Users } from 'lucide-react-native';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DESIGN_COLORS = {
   background: '#2D1B15',
@@ -24,15 +25,17 @@ const DESIGN_COLORS = {
 
 export default function TabLayout() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
           position: 'absolute',
-          bottom: 0,
-          left: '0%',
-          right: '0%',
+          bottom: insets.bottom > 0 ? insets.bottom : 12,
+          left: '2%',
+          right: '2%',
           borderRadius: 40,
           height: 72,
           borderTopWidth: 0,

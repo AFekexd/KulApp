@@ -4,6 +4,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
 import { ReactionBar } from '@/components/feed/ReactionBar';
 import { EmojiType } from '@/components/feed/ReactionBar';
+import { Emoji } from '@/components/ui/Emoji';
 import { colors, spacing, typography, borderRadius } from '@/theme';
 
 export interface FeedItem {
@@ -57,7 +58,7 @@ export const DropCard: React.FC<DropCardProps> = ({ item, onReact }) => {
           {/* Body */}
           <View style={styles.body}>
             <View style={styles.bristolContainer}>
-              <Text style={styles.bristolEmoji}>{item.bristol_emoji}</Text>
+              <Emoji symbol={item.bristol_emoji} size={24} style={{ marginRight: spacing.xs }} />
               <Text style={[typography.heading3, styles.bristolName]}>{item.bristol_name}</Text>
               <Text style={[typography.caption, styles.bristolScale]}>
                 Type {item.bristol_scale}

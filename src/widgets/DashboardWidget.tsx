@@ -1,4 +1,4 @@
-import React from 'react';
+"use no memo";
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
 
 export interface DashboardWidgetProps {
@@ -18,7 +18,7 @@ export function DashboardWidget({ todayCount, streak, xp, rank }: DashboardWidge
       style={{
         height: 'match_parent',
         width: 'match_parent',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#1E1E1E', // Dark mode premium
         borderRadius: 24,
         padding: 16,
         justifyContent: 'space-between',
@@ -33,23 +33,40 @@ export function DashboardWidget({ todayCount, streak, xp, rank }: DashboardWidge
           width: 'match_parent',
         }}
       >
-        <TextWidget
-          text="💩 PoopTracker"
-          style={{
-            fontSize: 14,
-            fontWeight: 'bold',
-            color: '#1B1B1B',
-          }}
-        />
+        <FlexWidget style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TextWidget
+            text="💩 "
+            style={{
+              fontSize: 16,
+            }}
+          />
+          <TextWidget
+            text="KulApp"
+            style={{
+              fontSize: 14,
+              fontWeight: 'bold',
+              color: '#FFFFFF',
+            }}
+          />
+        </FlexWidget>
 
-        <TextWidget
-          text={rank || '#17'}
+        <FlexWidget
           style={{
-            fontSize: 12,
-            fontWeight: 'bold',
-            color: '#7C4D2E',
+            backgroundColor: '#333333',
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 12,
           }}
-        />
+        >
+          <TextWidget
+            text={rank || '#17'}
+            style={{
+              fontSize: 12,
+              fontWeight: 'bold',
+              color: '#F5A623',
+            }}
+          />
+        </FlexWidget>
       </FlexWidget>
 
       {/* Stats Row */}
@@ -58,44 +75,54 @@ export function DashboardWidget({ todayCount, streak, xp, rank }: DashboardWidge
           flexDirection: 'row',
           justifyContent: 'space-around',
           alignItems: 'center',
-          backgroundColor: '#F7F7F5',
+          backgroundColor: '#2A2A2A',
           borderRadius: 16,
           padding: 12,
-          marginVertical: 4,
+          marginVertical: 6,
         }}
       >
         <FlexWidget style={{ alignItems: 'center' }}>
           <TextWidget
             text={`${todayCount}`}
             style={{
-              fontSize: 20,
+              fontSize: 22,
               fontWeight: 'bold',
-              color: '#1B1B1B',
+              color: '#FFFFFF',
             }}
           />
           <TextWidget
-            text="Today"
+            text="TODAY"
             style={{
               fontSize: 10,
-              color: '#6B6B6B',
+              color: '#AAAAAA',
+              letterSpacing: 1,
             }}
           />
         </FlexWidget>
+
+        <FlexWidget
+          style={{
+            width: 1,
+            height: 30,
+            backgroundColor: '#444444',
+          }}
+        />
 
         <FlexWidget style={{ alignItems: 'center' }}>
           <TextWidget
             text={`${xp || 1245}`}
             style={{
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: 'bold',
-              color: '#7C4D2E',
+              color: '#F5A623',
             }}
           />
           <TextWidget
-            text="XP Points"
+            text="XP POINTS"
             style={{
               fontSize: 10,
-              color: '#6B6B6B',
+              color: '#AAAAAA',
+              letterSpacing: 1,
             }}
           />
         </FlexWidget>
@@ -106,7 +133,7 @@ export function DashboardWidget({ todayCount, streak, xp, rank }: DashboardWidge
         style={{
           backgroundColor: '#7C4D2E',
           borderRadius: 14,
-          padding: 10,
+          padding: 12,
           alignItems: 'center',
           justifyContent: 'center',
           width: 'match_parent',
@@ -114,11 +141,12 @@ export function DashboardWidget({ todayCount, streak, xp, rank }: DashboardWidge
         clickAction="QUICK_DROP_ACTION"
       >
         <TextWidget
-          text="+ Quick Drop"
+          text="+ LOG QUICK DROP"
           style={{
             fontSize: 12,
             fontWeight: 'bold',
             color: '#FFFFFF',
+            letterSpacing: 1,
           }}
         />
       </FlexWidget>

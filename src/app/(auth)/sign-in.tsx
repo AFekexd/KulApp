@@ -1,26 +1,26 @@
 /**
- * Sign In & Sign Up Screen — PoopTracker
+ * Sign In & Sign Up Screen — KulAPP
  * 
  * Native iOS 18 inspired. Minimal, clean, playful, light mode.
  * Strict 8pt spacing, soft rounded corners, flat design.
  * No gradients, no glassmorphism, no neumorphism.
  */
-import React, { useState } from 'react';
+import { useAuthStore } from '@/stores/authStore';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
+  ActivityIndicator,
   Alert,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useAuthStore } from '@/stores/authStore';
 
 const C = {
   bg: '#F7F7F5',
@@ -104,7 +104,7 @@ export default function SignInScreen() {
               <View style={styles.logoCircle}>
                 <Text style={styles.logoEmoji}>💩</Text>
               </View>
-              <Text style={styles.appName}>PoopTracker</Text>
+              <Text style={styles.appName}>KulAPP</Text>
               <Text style={styles.tagline}>Community poop tracking</Text>
             </View>
 

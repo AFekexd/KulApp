@@ -1,30 +1,30 @@
 /**
- * Social Screen — PoopTracker
+ * Social Screen — KulAPP
  * 
  * Dedicated Friends & Groups management page.
  * Native iOS 18 inspired, light mode design system.
  * #F7F7F5 background, #7C4D2E accents, 8pt grid, soft rounded cards.
  */
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Platform,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Users, UserPlus, Search, Home, Copy, LogOut, ChevronRight, Hash, Crown, UserCheck } from 'lucide-react-native';
+import PageTransition from '@/components/PageTransition';
 import { useFriendshipStore } from '@/stores/friendshipStore';
 import { useGroupStore } from '@/stores/groupStore';
-import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import PageTransition from '@/components/PageTransition';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import { ChevronRight, Copy, Crown, Hash, Home, LogOut, Search, UserCheck, UserPlus, Users } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const C = {
   bg: '#F7F7F5',
@@ -164,350 +164,350 @@ export default function SocialScreen() {
 
   return (
     <PageTransition>
-    <View style={styles.screen}>
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* ─── Header ─── */}
-          <View style={styles.header}>
-            <View style={styles.headerTitleRow}>
-              <Text style={styles.headerTitle}>Social</Text>
-              <View style={styles.headerBadge}>
-                <Users size={16} color={C.primary} />
-                <Text style={styles.headerBadgeText}>
-                  {friends.length + groups.length}
-                </Text>
-              </View>
-            </View>
-            <Text style={styles.headerSub}>
-              Manage your friends & groups
-            </Text>
-          </View>
-
-          {/* ─── Tab Toggle ─── */}
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[styles.tabBtn, activeTab === 'friends' && styles.tabBtnActive]}
-              onPress={() => setActiveTab('friends')}
-              activeOpacity={0.8}
-            >
-              <UserPlus size={16} color={activeTab === 'friends' ? '#FFFFFF' : C.textSecondary} />
-              <Text style={[styles.tabText, activeTab === 'friends' && styles.tabTextActive]}>
-                Friends ({friends.length})
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tabBtn, activeTab === 'groups' && styles.tabBtnActive]}
-              onPress={() => setActiveTab('groups')}
-              activeOpacity={0.8}
-            >
-              <Home size={16} color={activeTab === 'groups' ? '#FFFFFF' : C.textSecondary} />
-              <Text style={[styles.tabText, activeTab === 'groups' && styles.tabTextActive]}>
-                Groups ({groups.length})
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* ━━━━━ FRIENDS TAB ━━━━━ */}
-          {activeTab === 'friends' && (
-            <View style={styles.tabContent}>
-              {/* Add Friend Card */}
-              <View style={styles.actionCard}>
-                <Text style={styles.actionCardTitle}>Add a Friend</Text>
-                <Text style={styles.actionCardSub}>Enter their username to send a request</Text>
-                <View style={styles.inputRow}>
-                  <View style={styles.inputWrapper}>
-                    <Search size={16} color={C.textMuted} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.searchInput}
-                      placeholder="Search by username..."
-                      placeholderTextColor={C.textMuted}
-                      value={friendSearch}
-                      onChangeText={setFriendSearch}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
-                  </View>
-                  <TouchableOpacity
-                    style={[styles.actionBtn, isSubmitting && styles.actionBtnDisabled]}
-                    onPress={handleAddFriend}
-                    disabled={isSubmitting}
-                    activeOpacity={0.85}
-                  >
-                    {isSubmitting ? (
-                      <ActivityIndicator size="small" color="#FFF" />
-                    ) : (
-                      <Text style={styles.actionBtnText}>Add</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Pending Requests */}
-              {pendingRequests.length > 0 && (
-                <View style={styles.sectionCard}>
-                  <Text style={styles.sectionTitle}>
-                    Pending Requests ({pendingRequests.length})
+      <View style={styles.screen}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* ─── Header ─── */}
+            <View style={styles.header}>
+              <View style={styles.headerTitleRow}>
+                <Text style={styles.headerTitle}>Social</Text>
+                <View style={styles.headerBadge}>
+                  <Users size={16} color={C.primary} />
+                  <Text style={styles.headerBadgeText}>
+                    {friends.length + groups.length}
                   </Text>
-                  {pendingRequests.map((req) => (
-                    <View key={req.id} style={styles.friendRow}>
-                      <View style={[styles.avatar, !req.friend_profile?.avatar_url && { backgroundColor: stringToColor(req.friend_profile?.username || req.id) }]}>
-                        {req.friend_profile?.avatar_url ? (
-                          <Image source={{ uri: req.friend_profile.avatar_url }} style={styles.avatarImage} contentFit="cover" />
-                        ) : (
-                          <Text style={styles.avatarText}>
-                            {(req.friend_profile?.display_name || req.friend_profile?.username || '?').charAt(0).toUpperCase()}
-                          </Text>
-                        )}
-                      </View>
-                      <View style={styles.friendInfo}>
-                        <Text style={styles.friendName}>
-                          {req.friend_profile?.display_name || req.friend_profile?.username || 'Incoming Request'}
-                        </Text>
-                        <Text style={styles.friendSub}>
-                          {req.friend_profile?.username ? `@${req.friend_profile.username}` : 'Waiting for your response'}
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        style={styles.acceptBtn}
-                        onPress={() => acceptFriendRequest(req.id)}
-                      >
-                        <UserCheck size={14} color="#FFF" />
-                        <Text style={styles.acceptBtnText}>Accept</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ))}
                 </View>
-              )}
-
-              {/* Friends List */}
-              <View style={styles.sectionCard}>
-                <Text style={styles.sectionTitle}>Your Friends</Text>
-
-                {friendsLoading ? (
-                  <View style={styles.emptyState}>
-                    <ActivityIndicator size="small" color={C.primary} />
-                    <Text style={styles.emptyText}>Loading friends...</Text>
-                  </View>
-                ) : friends.length > 0 ? (
-                  friends.map((friend) => (
-                    <TouchableOpacity
-                      key={friend.id}
-                      style={styles.friendRow}
-                      activeOpacity={0.7}
-                      onPress={() => router.push(`/(modals)/friend-profile?id=${friend.id}`)}
-                    >
-                      <View style={[styles.avatar, !friend.avatar_url && { backgroundColor: stringToColor(friend.username || friend.id) }]}>
-                        {friend.avatar_url ? (
-                          <Image source={{ uri: friend.avatar_url }} style={styles.avatarImage} contentFit="cover" />
-                        ) : (
-                          <Text style={styles.avatarText}>
-                            {(friend.display_name || friend.username || '?').charAt(0).toUpperCase()}
-                          </Text>
-                        )}
-                      </View>
-                      <View style={styles.friendInfo}>
-                        <Text style={styles.friendName}>
-                          {friend.display_name || friend.username}
-                        </Text>
-                        <Text style={styles.friendSub}>@{friend.username}</Text>
-                      </View>
-                      <View style={styles.friendMeta}>
-                        <View style={styles.streakBadge}>
-                          <Text style={styles.streakText}>🔥 {friend.streak_days || 0}</Text>
-                        </View>
-                        <TouchableOpacity
-                          style={styles.nudgeBtnSmall}
-                          onPress={(e) => {
-                            e.stopPropagation();
-                            Alert.alert('Poke Sent!', `You poked @${friend.username} with a 🪠!`);
-                          }}
-                        >
-                          <Text style={styles.nudgeBtnSmallText}>🪠</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </TouchableOpacity>
-                  ))
-                ) : (
-                  <View style={styles.emptyState}>
-                    <Text style={styles.emptyEmoji}>👥</Text>
-                    <Text style={styles.emptyTitle}>No Friends Yet</Text>
-                    <Text style={styles.emptyText}>
-                      Add friends by their username to share your poop journey together!
-                    </Text>
-                  </View>
-                )}
               </View>
+              <Text style={styles.headerSub}>
+                Manage your friends & groups
+              </Text>
             </View>
-          )}
 
-          {/* ━━━━━ GROUPS TAB ━━━━━ */}
-          {activeTab === 'groups' && (
-            <View style={styles.tabContent}>
-              {/* Create Group Card */}
-              <View style={styles.actionCard}>
-                <Text style={styles.actionCardTitle}>Create a Group</Text>
-                <Text style={styles.actionCardSub}>Start a new group and invite friends</Text>
-                <View style={styles.inputRow}>
-                  <View style={styles.inputWrapper}>
-                    <Home size={16} color={C.textMuted} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.searchInput}
-                      placeholder="Group name (e.g. Dorm 3rd Floor)"
-                      placeholderTextColor={C.textMuted}
-                      value={newGroupName}
-                      onChangeText={setNewGroupName}
-                    />
+            {/* ─── Tab Toggle ─── */}
+            <View style={styles.tabContainer}>
+              <TouchableOpacity
+                style={[styles.tabBtn, activeTab === 'friends' && styles.tabBtnActive]}
+                onPress={() => setActiveTab('friends')}
+                activeOpacity={0.8}
+              >
+                <UserPlus size={16} color={activeTab === 'friends' ? '#FFFFFF' : C.textSecondary} />
+                <Text style={[styles.tabText, activeTab === 'friends' && styles.tabTextActive]}>
+                  Friends ({friends.length})
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tabBtn, activeTab === 'groups' && styles.tabBtnActive]}
+                onPress={() => setActiveTab('groups')}
+                activeOpacity={0.8}
+              >
+                <Home size={16} color={activeTab === 'groups' ? '#FFFFFF' : C.textSecondary} />
+                <Text style={[styles.tabText, activeTab === 'groups' && styles.tabTextActive]}>
+                  Groups ({groups.length})
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* ━━━━━ FRIENDS TAB ━━━━━ */}
+            {activeTab === 'friends' && (
+              <View style={styles.tabContent}>
+                {/* Add Friend Card */}
+                <View style={styles.actionCard}>
+                  <Text style={styles.actionCardTitle}>Add a Friend</Text>
+                  <Text style={styles.actionCardSub}>Enter their username to send a request</Text>
+                  <View style={styles.inputRow}>
+                    <View style={styles.inputWrapper}>
+                      <Search size={16} color={C.textMuted} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search by username..."
+                        placeholderTextColor={C.textMuted}
+                        value={friendSearch}
+                        onChangeText={setFriendSearch}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.actionBtn, isSubmitting && styles.actionBtnDisabled]}
+                      onPress={handleAddFriend}
+                      disabled={isSubmitting}
+                      activeOpacity={0.85}
+                    >
+                      {isSubmitting ? (
+                        <ActivityIndicator size="small" color="#FFF" />
+                      ) : (
+                        <Text style={styles.actionBtnText}>Add</Text>
+                      )}
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    style={[styles.actionBtn, isSubmitting && styles.actionBtnDisabled]}
-                    onPress={handleCreateGroup}
-                    disabled={isSubmitting}
-                    activeOpacity={0.85}
-                  >
-                    {isSubmitting ? (
-                      <ActivityIndicator size="small" color="#FFF" />
-                    ) : (
-                      <Text style={styles.actionBtnText}>Create</Text>
-                    )}
-                  </TouchableOpacity>
                 </View>
-              </View>
 
-              {/* Join Group Card */}
-              <View style={styles.actionCard}>
-                <Text style={styles.actionCardTitle}>Join a Group</Text>
-                <Text style={styles.actionCardSub}>Enter a 6-character invite code</Text>
-                <View style={styles.inputRow}>
-                  <View style={styles.inputWrapper}>
-                    <Hash size={16} color={C.textMuted} style={styles.inputIcon} />
-                    <TextInput
-                      style={[styles.searchInput, styles.codeInput]}
-                      placeholder="ABC123"
-                      placeholderTextColor={C.textMuted}
-                      value={joinCode}
-                      onChangeText={(t) => setJoinCode(t.toUpperCase())}
-                      autoCapitalize="characters"
-                      maxLength={6}
-                    />
-                  </View>
-                  <TouchableOpacity
-                    style={[styles.actionBtn, styles.joinBtn, isSubmitting && styles.actionBtnDisabled]}
-                    onPress={handleJoinGroup}
-                    disabled={isSubmitting}
-                    activeOpacity={0.85}
-                  >
-                    {isSubmitting ? (
-                      <ActivityIndicator size="small" color="#FFF" />
-                    ) : (
-                      <Text style={styles.actionBtnText}>Join</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Groups List */}
-              <View style={styles.sectionCard}>
-                <Text style={styles.sectionTitle}>Your Groups</Text>
-
-                {groupsLoading ? (
-                  <View style={styles.emptyState}>
-                    <ActivityIndicator size="small" color={C.primary} />
-                    <Text style={styles.emptyText}>Loading groups...</Text>
-                  </View>
-                ) : groups.length > 0 ? (
-                  groups.map((group) => (
-                    <View key={group.id}>
-                      <TouchableOpacity
-                        style={styles.groupRow}
-                        onPress={() => handleExpandGroup(group.id)}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.groupAvatar}>
-                          <Home size={18} color={C.primary} />
-                        </View>
-                        <View style={styles.groupInfo}>
-                          <Text style={styles.groupName}>{group.name}</Text>
-                          <View style={styles.groupCodeRow}>
-                            <Text style={styles.groupCode}>{group.invite_code}</Text>
-                            <TouchableOpacity
-                              onPress={() => handleCopyCode(group.invite_code)}
-                              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                            >
-                              <Copy size={12} color={C.textMuted} />
-                            </TouchableOpacity>
-                          </View>
-                        </View>
-                        <ChevronRight
-                          size={18}
-                          color={C.textMuted}
-                          style={{
-                            transform: [{ rotate: expandedGroup === group.id ? '90deg' : '0deg' }],
-                          }}
-                        />
-                      </TouchableOpacity>
-
-                      {/* Expanded: Members + Leave */}
-                      {expandedGroup === group.id && (
-                        <View style={styles.groupExpanded}>
-                          <Text style={styles.membersTitle}>Members</Text>
-                          {(members[group.id] || []).length > 0 ? (
-                            (members[group.id] || []).map((member) => (
-                              <View key={member.id} style={styles.memberRow}>
-                                <View style={[styles.memberAvatar, !member.avatar_url && { backgroundColor: stringToColor(member.username || member.id) }]}>
-                                  {member.avatar_url ? (
-                                    <Image source={{ uri: member.avatar_url }} style={styles.memberAvatarImage} contentFit="cover" />
-                                  ) : (
-                                    <Text style={styles.memberAvatarText}>
-                                      {(member.display_name || member.username || '?').charAt(0).toUpperCase()}
-                                    </Text>
-                                  )}
-                                </View>
-                                <Text style={styles.memberName}>
-                                  {member.display_name || member.username}
-                                </Text>
-                                {group.created_by === member.id && (
-                                  <Crown size={12} color={C.secondary} />
-                                )}
-                              </View>
-                            ))
+                {/* Pending Requests */}
+                {pendingRequests.length > 0 && (
+                  <View style={styles.sectionCard}>
+                    <Text style={styles.sectionTitle}>
+                      Pending Requests ({pendingRequests.length})
+                    </Text>
+                    {pendingRequests.map((req) => (
+                      <View key={req.id} style={styles.friendRow}>
+                        <View style={[styles.avatar, !req.friend_profile?.avatar_url && { backgroundColor: stringToColor(req.friend_profile?.username || req.id) }]}>
+                          {req.friend_profile?.avatar_url ? (
+                            <Image source={{ uri: req.friend_profile.avatar_url }} style={styles.avatarImage} contentFit="cover" />
                           ) : (
-                            <Text style={styles.membersSub}>
-                              No members loaded yet
+                            <Text style={styles.avatarText}>
+                              {(req.friend_profile?.display_name || req.friend_profile?.username || '?').charAt(0).toUpperCase()}
                             </Text>
                           )}
-                          <TouchableOpacity
-                            style={styles.leaveBtn}
-                            onPress={() => handleLeaveGroup(group.id, group.name)}
-                            activeOpacity={0.8}
-                          >
-                            <LogOut size={14} color={C.danger} />
-                            <Text style={styles.leaveBtnText}>Leave Group</Text>
-                          </TouchableOpacity>
                         </View>
-                      )}
-                    </View>
-                  ))
-                ) : (
-                  <View style={styles.emptyState}>
-                    <Text style={styles.emptyEmoji}>🏠</Text>
-                    <Text style={styles.emptyTitle}>No Groups Yet</Text>
-                    <Text style={styles.emptyText}>
-                      Create a group or join one with an invite code to compete with friends!
-                    </Text>
+                        <View style={styles.friendInfo}>
+                          <Text style={styles.friendName}>
+                            {req.friend_profile?.display_name || req.friend_profile?.username || 'Incoming Request'}
+                          </Text>
+                          <Text style={styles.friendSub}>
+                            {req.friend_profile?.username ? `@${req.friend_profile.username}` : 'Waiting for your response'}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          style={styles.acceptBtn}
+                          onPress={() => acceptFriendRequest(req.id)}
+                        >
+                          <UserCheck size={14} color="#FFF" />
+                          <Text style={styles.acceptBtnText}>Accept</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
                   </View>
                 )}
-              </View>
-            </View>
-          )}
 
-          <View style={{ height: 100 }} />
-        </ScrollView>
-      </SafeAreaView>
-    </View>
+                {/* Friends List */}
+                <View style={styles.sectionCard}>
+                  <Text style={styles.sectionTitle}>Your Friends</Text>
+
+                  {friendsLoading ? (
+                    <View style={styles.emptyState}>
+                      <ActivityIndicator size="small" color={C.primary} />
+                      <Text style={styles.emptyText}>Loading friends...</Text>
+                    </View>
+                  ) : friends.length > 0 ? (
+                    friends.map((friend) => (
+                      <TouchableOpacity
+                        key={friend.id}
+                        style={styles.friendRow}
+                        activeOpacity={0.7}
+                        onPress={() => router.push(`/(modals)/friend-profile?id=${friend.id}`)}
+                      >
+                        <View style={[styles.avatar, !friend.avatar_url && { backgroundColor: stringToColor(friend.username || friend.id) }]}>
+                          {friend.avatar_url ? (
+                            <Image source={{ uri: friend.avatar_url }} style={styles.avatarImage} contentFit="cover" />
+                          ) : (
+                            <Text style={styles.avatarText}>
+                              {(friend.display_name || friend.username || '?').charAt(0).toUpperCase()}
+                            </Text>
+                          )}
+                        </View>
+                        <View style={styles.friendInfo}>
+                          <Text style={styles.friendName}>
+                            {friend.display_name || friend.username}
+                          </Text>
+                          <Text style={styles.friendSub}>@{friend.username}</Text>
+                        </View>
+                        <View style={styles.friendMeta}>
+                          <View style={styles.streakBadge}>
+                            <Text style={styles.streakText}>🔥 {friend.streak_days || 0}</Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.nudgeBtnSmall}
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              Alert.alert('Poke Sent!', `You poked @${friend.username} with a 🪠!`);
+                            }}
+                          >
+                            <Text style={styles.nudgeBtnSmallText}>🪠</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </TouchableOpacity>
+                    ))
+                  ) : (
+                    <View style={styles.emptyState}>
+                      <Text style={styles.emptyEmoji}>👥</Text>
+                      <Text style={styles.emptyTitle}>No Friends Yet</Text>
+                      <Text style={styles.emptyText}>
+                        Add friends by their username to share your poop journey together!
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            )}
+
+            {/* ━━━━━ GROUPS TAB ━━━━━ */}
+            {activeTab === 'groups' && (
+              <View style={styles.tabContent}>
+                {/* Create Group Card */}
+                <View style={styles.actionCard}>
+                  <Text style={styles.actionCardTitle}>Create a Group</Text>
+                  <Text style={styles.actionCardSub}>Start a new group and invite friends</Text>
+                  <View style={styles.inputRow}>
+                    <View style={styles.inputWrapper}>
+                      <Home size={16} color={C.textMuted} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.searchInput}
+                        placeholder="Group name (e.g. Dorm 3rd Floor)"
+                        placeholderTextColor={C.textMuted}
+                        value={newGroupName}
+                        onChangeText={setNewGroupName}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.actionBtn, isSubmitting && styles.actionBtnDisabled]}
+                      onPress={handleCreateGroup}
+                      disabled={isSubmitting}
+                      activeOpacity={0.85}
+                    >
+                      {isSubmitting ? (
+                        <ActivityIndicator size="small" color="#FFF" />
+                      ) : (
+                        <Text style={styles.actionBtnText}>Create</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Join Group Card */}
+                <View style={styles.actionCard}>
+                  <Text style={styles.actionCardTitle}>Join a Group</Text>
+                  <Text style={styles.actionCardSub}>Enter a 6-character invite code</Text>
+                  <View style={styles.inputRow}>
+                    <View style={styles.inputWrapper}>
+                      <Hash size={16} color={C.textMuted} style={styles.inputIcon} />
+                      <TextInput
+                        style={[styles.searchInput, styles.codeInput]}
+                        placeholder="ABC123"
+                        placeholderTextColor={C.textMuted}
+                        value={joinCode}
+                        onChangeText={(t) => setJoinCode(t.toUpperCase())}
+                        autoCapitalize="characters"
+                        maxLength={6}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.actionBtn, styles.joinBtn, isSubmitting && styles.actionBtnDisabled]}
+                      onPress={handleJoinGroup}
+                      disabled={isSubmitting}
+                      activeOpacity={0.85}
+                    >
+                      {isSubmitting ? (
+                        <ActivityIndicator size="small" color="#FFF" />
+                      ) : (
+                        <Text style={styles.actionBtnText}>Join</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Groups List */}
+                <View style={styles.sectionCard}>
+                  <Text style={styles.sectionTitle}>Your Groups</Text>
+
+                  {groupsLoading ? (
+                    <View style={styles.emptyState}>
+                      <ActivityIndicator size="small" color={C.primary} />
+                      <Text style={styles.emptyText}>Loading groups...</Text>
+                    </View>
+                  ) : groups.length > 0 ? (
+                    groups.map((group) => (
+                      <View key={group.id}>
+                        <TouchableOpacity
+                          style={styles.groupRow}
+                          onPress={() => handleExpandGroup(group.id)}
+                          activeOpacity={0.7}
+                        >
+                          <View style={styles.groupAvatar}>
+                            <Home size={18} color={C.primary} />
+                          </View>
+                          <View style={styles.groupInfo}>
+                            <Text style={styles.groupName}>{group.name}</Text>
+                            <View style={styles.groupCodeRow}>
+                              <Text style={styles.groupCode}>{group.invite_code}</Text>
+                              <TouchableOpacity
+                                onPress={() => handleCopyCode(group.invite_code)}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                              >
+                                <Copy size={12} color={C.textMuted} />
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                          <ChevronRight
+                            size={18}
+                            color={C.textMuted}
+                            style={{
+                              transform: [{ rotate: expandedGroup === group.id ? '90deg' : '0deg' }],
+                            }}
+                          />
+                        </TouchableOpacity>
+
+                        {/* Expanded: Members + Leave */}
+                        {expandedGroup === group.id && (
+                          <View style={styles.groupExpanded}>
+                            <Text style={styles.membersTitle}>Members</Text>
+                            {(members[group.id] || []).length > 0 ? (
+                              (members[group.id] || []).map((member) => (
+                                <View key={member.id} style={styles.memberRow}>
+                                  <View style={[styles.memberAvatar, !member.avatar_url && { backgroundColor: stringToColor(member.username || member.id) }]}>
+                                    {member.avatar_url ? (
+                                      <Image source={{ uri: member.avatar_url }} style={styles.memberAvatarImage} contentFit="cover" />
+                                    ) : (
+                                      <Text style={styles.memberAvatarText}>
+                                        {(member.display_name || member.username || '?').charAt(0).toUpperCase()}
+                                      </Text>
+                                    )}
+                                  </View>
+                                  <Text style={styles.memberName}>
+                                    {member.display_name || member.username}
+                                  </Text>
+                                  {group.created_by === member.id && (
+                                    <Crown size={12} color={C.secondary} />
+                                  )}
+                                </View>
+                              ))
+                            ) : (
+                              <Text style={styles.membersSub}>
+                                No members loaded yet
+                              </Text>
+                            )}
+                            <TouchableOpacity
+                              style={styles.leaveBtn}
+                              onPress={() => handleLeaveGroup(group.id, group.name)}
+                              activeOpacity={0.8}
+                            >
+                              <LogOut size={14} color={C.danger} />
+                              <Text style={styles.leaveBtnText}>Leave Group</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                      </View>
+                    ))
+                  ) : (
+                    <View style={styles.emptyState}>
+                      <Text style={styles.emptyEmoji}>🏠</Text>
+                      <Text style={styles.emptyTitle}>No Groups Yet</Text>
+                      <Text style={styles.emptyText}>
+                        Create a group or join one with an invite code to compete with friends!
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            )}
+
+            <View style={{ height: 100 }} />
+          </ScrollView>
+        </SafeAreaView>
+      </View>
     </PageTransition>
   );
 }

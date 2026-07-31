@@ -1,24 +1,24 @@
 /**
- * Reports Feed Screen — PoopTracker
+ * Reports Feed Screen — KulAPP
  * Native iOS 18 style feed for community poop reports.
  */
-import React, { useState } from 'react';
+import PageTransition from '@/components/PageTransition';
+import { FeedItem, useFeedStore } from '@/stores/feedStore';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import { Globe, Home, Lock, MapPin, Radio, Search, ThumbsUp, Users } from 'lucide-react-native';
+import { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
   Platform,
   RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useFeedStore, FeedItem } from '@/stores/feedStore';
-import { Search, MapPin, Globe, Users, Home, Lock, ThumbsUp, Radio } from 'lucide-react-native';
-import PageTransition from '@/components/PageTransition';
-import { Image } from 'expo-image';
 
 const DESIGN_COLORS = {
   background: '#2D1B15',
@@ -80,152 +80,152 @@ export default function FeedScreen() {
 
   return (
     <PageTransition>
-    <View style={styles.screenOuter}>
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={refreshFeed}
-              tintColor={DESIGN_COLORS.primary}
-            />
-          }
-        >
-          {/* Header */}
-          <View style={styles.headerRow}>
-            <View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text style={styles.title}>Recent Reports</Text>
-                <Radio size={24} color={DESIGN_COLORS.textPrimary} />
+      <View style={styles.screenOuter}>
+        <SafeAreaView style={styles.container} edges={['top']}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={refreshFeed}
+                tintColor={DESIGN_COLORS.primary}
+              />
+            }
+          >
+            {/* Header */}
+            <View style={styles.headerRow}>
+              <View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={styles.title}>Recent Reports</Text>
+                  <Radio size={24} color={DESIGN_COLORS.textPrimary} />
+                </View>
+                <Text style={styles.subtitle}>Real-time community drop activity</Text>
               </View>
-              <Text style={styles.subtitle}>Real-time community drop activity</Text>
+
+              <TouchableOpacity
+                style={styles.newReportBtn}
+                activeOpacity={0.8}
+                onPress={() => router.push('/(modals)/quick-drop')}
+              >
+                <Text style={styles.newReportBtnText}>+ Log Drop</Text>
+              </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={styles.newReportBtn}
-              activeOpacity={0.8}
-              onPress={() => router.push('/(modals)/quick-drop')}
-            >
-              <Text style={styles.newReportBtnText}>+ Log Drop</Text>
-            </TouchableOpacity>
-          </View>
+            {/* Search Input */}
+            <View style={styles.searchBarContainer}>
+              <Search size={16} color={DESIGN_COLORS.textSecondary} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search by location, title or user..."
+                placeholderTextColor={DESIGN_COLORS.textSecondary}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              {searchQuery !== '' && (
+                <TouchableOpacity onPress={() => setSearchQuery('')}>
+                  <Text style={styles.clearSearchText}>✕</Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
-          {/* Search Input */}
-          <View style={styles.searchBarContainer}>
-            <Search size={16} color={DESIGN_COLORS.textSecondary} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search by location, title or user..."
-              placeholderTextColor={DESIGN_COLORS.textSecondary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery !== '' && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Text style={styles.clearSearchText}>✕</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Filter Pills: Privacy & Scope */}
-          <View style={styles.filterPillRow}>
-            {(['all', 'friends', 'group', 'private'] as const).map((f) => (
-              <TouchableOpacity
-                key={f}
-                style={[styles.filterPill, activePrivacyFilter === f && styles.filterPillActive]}
-                onPress={() => setActivePrivacyFilter(f)}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  {f === 'all' && <Globe size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
-                  {f === 'friends' && <Users size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
-                  {f === 'group' && <Home size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
-                  {f === 'private' && <Lock size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
-                  <Text style={[styles.filterPillText, activePrivacyFilter === f && styles.filterPillTextActive]}>
-                    {f === 'all' ? 'All Drops' : f === 'friends' ? 'Friends' : f === 'group' ? 'Group' : 'Private'}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Feed List */}
-          <View style={styles.feedStack}>
-            {filteredItems.length > 0 ? (
-              filteredItems.map((report: FeedItem) => {
-                const badgeStyle = getSizeBadgeStyle(report.size_badge || 'Medium');
-                return (
-                  <View key={report.id} style={styles.reportCard}>
-                    <View style={styles.cardTopRow}>
-                      <View style={styles.authorGroup}>
-                        <View style={[styles.avatarCircle, !report.profiles?.avatar_url && { backgroundColor: '#5D4037' }]}>
-                          {report.profiles?.avatar_url ? (
-                            <Image source={{ uri: report.profiles.avatar_url }} style={styles.avatarImage} contentFit="cover" />
-                          ) : (
-                            <Text style={styles.avatarText}>
-                              {report.profiles.username.slice(0, 2).toUpperCase()}
-                            </Text>
-                          )}
-                        </View>
-                        <View>
-                          <Text style={styles.username}>{report.profiles.username}</Text>
-                          <Text style={styles.timeAgo}>{formatTimeAgo(report.created_at)}</Text>
-                        </View>
-                      </View>
-
-                      <View style={[styles.sizeBadge, { backgroundColor: badgeStyle.bg }]}>
-                        <Text style={[styles.sizeBadgeText, { color: badgeStyle.text }]}>
-                          {report.size_badge}
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Report Content */}
-                    <View style={styles.cardBody}>
-                      <Text style={styles.reportTitle}>{report.custom_title || `${report.location} Session`}</Text>
-                      
-                      <View style={styles.locationMetaRow}>
-                        <MapPin size={13} color={DESIGN_COLORS.textSecondary} />
-                        <Text style={styles.locationText}>{report.location}</Text>
-                        <Text style={styles.metaDot}>•</Text>
-                        <Text style={styles.verificationBadge}>✓ Verified {report.verification_pct}%</Text>
-                      </View>
-                    </View>
-
-                    {/* Footer Actions */}
-                    <View style={styles.cardFooter}>
-                      <Text style={styles.reactionsText}>
-                        {report.reactions_count} {report.reactions_count === 1 ? 'reaction' : 'reactions'}
-                      </Text>
-
-                      <TouchableOpacity
-                        style={[styles.upvoteBtn, report.is_upvoted && styles.upvoteBtnActive]}
-                        activeOpacity={0.7}
-                        onPress={() => toggleUpvote(report.id)}
-                      >
-                        <ThumbsUp size={12} color={report.is_upvoted ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary} />
-                        <Text style={[styles.upvoteLabel, report.is_upvoted && styles.upvoteLabelActive]}>
-                          {report.is_upvoted ? 'Upvoted' : 'Upvote'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
+            {/* Filter Pills: Privacy & Scope */}
+            <View style={styles.filterPillRow}>
+              {(['all', 'friends', 'group', 'private'] as const).map((f) => (
+                <TouchableOpacity
+                  key={f}
+                  style={[styles.filterPill, activePrivacyFilter === f && styles.filterPillActive]}
+                  onPress={() => setActivePrivacyFilter(f)}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    {f === 'all' && <Globe size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
+                    {f === 'friends' && <Users size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
+                    {f === 'group' && <Home size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
+                    {f === 'private' && <Lock size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
+                    <Text style={[styles.filterPillText, activePrivacyFilter === f && styles.filterPillTextActive]}>
+                      {f === 'all' ? 'All Drops' : f === 'friends' ? 'Friends' : f === 'group' ? 'Group' : 'Private'}
+                    </Text>
                   </View>
-                );
-              })
-            ) : (
-              <View style={styles.emptyCard}>
-                <Search size={32} color={DESIGN_COLORS.textSecondary} />
-                <Text style={styles.emptyTitle}>No reports found</Text>
-                <Text style={styles.emptySub}>Try clearing your search or filter to see more community drops.</Text>
-              </View>
-            )}
-          </View>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-          <View style={{ height: 90 }} />
-        </ScrollView>
-      </SafeAreaView>
-    </View>
+            {/* Feed List */}
+            <View style={styles.feedStack}>
+              {filteredItems.length > 0 ? (
+                filteredItems.map((report: FeedItem) => {
+                  const badgeStyle = getSizeBadgeStyle(report.size_badge || 'Medium');
+                  return (
+                    <View key={report.id} style={styles.reportCard}>
+                      <View style={styles.cardTopRow}>
+                        <View style={styles.authorGroup}>
+                          <View style={[styles.avatarCircle, !report.profiles?.avatar_url && { backgroundColor: '#5D4037' }]}>
+                            {report.profiles?.avatar_url ? (
+                              <Image source={{ uri: report.profiles.avatar_url }} style={styles.avatarImage} contentFit="cover" />
+                            ) : (
+                              <Text style={styles.avatarText}>
+                                {report.profiles.username.slice(0, 2).toUpperCase()}
+                              </Text>
+                            )}
+                          </View>
+                          <View>
+                            <Text style={styles.username}>{report.profiles.username}</Text>
+                            <Text style={styles.timeAgo}>{formatTimeAgo(report.created_at)}</Text>
+                          </View>
+                        </View>
+
+                        <View style={[styles.sizeBadge, { backgroundColor: badgeStyle.bg }]}>
+                          <Text style={[styles.sizeBadgeText, { color: badgeStyle.text }]}>
+                            {report.size_badge}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Report Content */}
+                      <View style={styles.cardBody}>
+                        <Text style={styles.reportTitle}>{report.custom_title || `${report.location} Session`}</Text>
+
+                        <View style={styles.locationMetaRow}>
+                          <MapPin size={13} color={DESIGN_COLORS.textSecondary} />
+                          <Text style={styles.locationText}>{report.location}</Text>
+                          <Text style={styles.metaDot}>•</Text>
+                          <Text style={styles.verificationBadge}>✓ Verified {report.verification_pct}%</Text>
+                        </View>
+                      </View>
+
+                      {/* Footer Actions */}
+                      <View style={styles.cardFooter}>
+                        <Text style={styles.reactionsText}>
+                          {report.reactions_count} {report.reactions_count === 1 ? 'reaction' : 'reactions'}
+                        </Text>
+
+                        <TouchableOpacity
+                          style={[styles.upvoteBtn, report.is_upvoted && styles.upvoteBtnActive]}
+                          activeOpacity={0.7}
+                          onPress={() => toggleUpvote(report.id)}
+                        >
+                          <ThumbsUp size={12} color={report.is_upvoted ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary} />
+                          <Text style={[styles.upvoteLabel, report.is_upvoted && styles.upvoteLabelActive]}>
+                            {report.is_upvoted ? 'Upvoted' : 'Upvote'}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  );
+                })
+              ) : (
+                <View style={styles.emptyCard}>
+                  <Search size={32} color={DESIGN_COLORS.textSecondary} />
+                  <Text style={styles.emptyTitle}>No reports found</Text>
+                  <Text style={styles.emptySub}>Try clearing your search or filter to see more community drops.</Text>
+                </View>
+              )}
+            </View>
+
+            <View style={{ height: 90 }} />
+          </ScrollView>
+        </SafeAreaView>
+      </View>
     </PageTransition>
   );
 }

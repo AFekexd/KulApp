@@ -1,27 +1,27 @@
 /**
- * Quick Drop Modal — PoopTracker
+ * Quick Drop Modal — KulAPP
  * Native iOS 18 styled drop logger with GSAP smooth animations,
  * dynamic location search, empty default location & transparent backdrop.
  */
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useAuthStore } from '@/stores/authStore';
+import { useDropStore } from '@/stores/dropStore';
+import { useFeedStore } from '@/stores/feedStore';
+import { useRouter } from 'expo-router';
+import gsap from 'gsap';
+import { ChevronLeft, ChevronRight, Globe, Lock, MapPin, Plus, Users, X } from 'lucide-react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
+  Animated,
+  Easing,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Animated,
-  Easing,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import gsap from 'gsap';
-import { X, ChevronLeft, ChevronRight, MapPin, Plus, Globe, Users, Lock } from 'lucide-react-native';
-import { useDropStore } from '@/stores/dropStore';
-import { useFeedStore } from '@/stores/feedStore';
-import { useAuthStore } from '@/stores/authStore';
 
 const DESIGN_COLORS = {
   background: '#2D1B15',
@@ -59,7 +59,7 @@ export default function QuickDropModal() {
 
   const [bristolScale, setBristolScale] = useState<number>(4);
   const [sizeBadge, setSizeBadge] = useState<'Tiny' | 'Small' | 'Medium' | 'Large' | 'Massive'>('Medium');
-  
+
   // Location is EMPTY by default as requested!
   const [locationSearch, setLocationSearch] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('');
@@ -380,9 +380,9 @@ export default function QuickDropModal() {
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                     {p === 'public' ? <Globe size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} /> :
-                     p === 'friends' ? <Users size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} /> :
-                     p === 'group' ? <Users size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} /> :
-                     <Lock size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
+                      p === 'friends' ? <Users size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} /> :
+                        p === 'group' ? <Users size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} /> :
+                          <Lock size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
                     <Text style={[styles.privacyText, privacy === p && styles.privacyTextActive]}>
                       {p === 'public' ? 'Public' : p === 'friends' ? 'Friends' : p === 'group' ? 'Group' : 'Private'}
                     </Text>

@@ -4,6 +4,8 @@ import { PanicDropWidget } from './PanicDropWidget';
 import { DashboardWidget } from './DashboardWidget';
 import { storage } from '@/lib/mmkv';
 
+import { StreakWidget } from './StreakWidget';
+
 const KEYS = {
   TODAY_COUNT: 'kulapp:today_count',
   STREAK: 'kulapp:streak',
@@ -34,5 +36,7 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
         rank="#17"
       />
     );
+  } else if (widgetInfo.widgetName === 'Streak') {
+    renderWidget(<StreakWidget streak={streak} />);
   }
 }

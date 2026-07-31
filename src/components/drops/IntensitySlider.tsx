@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AnimatedPressable } from '@/components/ui/AnimatedPressable';
+import { Emoji } from '@/components/ui/Emoji';
 import { colors, spacing, typography, borderRadius } from '@/theme';
 
 export type Intensity = 'light' | 'standard' | 'heavy';
@@ -39,7 +40,7 @@ export const IntensitySlider: React.FC<IntensitySliderProps> = ({ selected, onSe
                 isSelected ? styles.segmentSelected : styles.segmentUnselected
               ])}
             >
-              <Text style={styles.emoji}>{option.emoji}</Text>
+              <Emoji symbol={option.emoji} size={24} style={{ marginBottom: spacing.xs }} />
               <Text style={[
                 typography.caption,
                 styles.label,

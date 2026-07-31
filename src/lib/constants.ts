@@ -1,9 +1,9 @@
 /**
- * KulApp Constants
+ * KulAPP Constants
  */
 import { Colors } from '@/theme/colors';
 
-export const APP_NAME = 'KulApp';
+export const APP_NAME = 'KulAPP';
 
 export const REACTIONS = {
   TP: { emoji: '🧻', label: 'Send Paper', color: Colors.dark.text },

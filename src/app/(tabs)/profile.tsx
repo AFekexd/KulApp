@@ -1,27 +1,27 @@
 /**
- * Profile Screen — PoopTracker
+ * Profile Screen — KulAPP
  * Native iOS 18 style. Dark mode theme. Stats summary, profile editing, preferences, account.
  * Social / Friends & Groups are on their own dedicated tab.
  */
-import React, { useState, useEffect } from 'react';
+import PageTransition from '@/components/PageTransition';
+import { useAuthStore } from '@/stores/authStore';
+import { useDropStore } from '@/stores/dropStore';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
+import { Camera, ChevronRight, Flame, Ghost, LogOut, Package, Pencil } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Switch,
-  TouchableOpacity,
-  TextInput,
-  Platform,
   Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useDropStore } from '@/stores/dropStore';
-import { useAuthStore } from '@/stores/authStore';
-import { Pencil, Flame, Ghost, Package, LogOut, ChevronRight, Camera } from 'lucide-react-native';
-import PageTransition from '@/components/PageTransition';
-import * as ImagePicker from 'expo-image-picker';
-import { Image } from 'expo-image';
 
 const C = {
   bg: '#2D1B15',
@@ -114,191 +114,191 @@ export default function ProfileScreen() {
 
   return (
     <PageTransition>
-    <View style={styles.screen}>
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* ─── Header ─── */}
-          <Text style={styles.headerTitle}>Profile</Text>
+      <View style={styles.screen}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            {/* ─── Header ─── */}
+            <Text style={styles.headerTitle}>Profile</Text>
 
-          {/* ─── User Card ─── */}
-          <View style={styles.userCard}>
-            <View style={styles.avatarContainer}>
-              <TouchableOpacity onPress={handlePickAvatar} disabled={isUploading} activeOpacity={0.8}>
-                {profile?.avatar_url ? (
-                  <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} contentFit="cover" />
+            {/* ─── User Card ─── */}
+            <View style={styles.userCard}>
+              <View style={styles.avatarContainer}>
+                <TouchableOpacity onPress={handlePickAvatar} disabled={isUploading} activeOpacity={0.8}>
+                  {profile?.avatar_url ? (
+                    <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} contentFit="cover" />
+                  ) : (
+                    <View style={styles.avatarLarge}>
+                      <Text style={styles.avatarText}>{userInitials}</Text>
+                    </View>
+                  )}
+                  <View style={styles.editAvatarBadge}>
+                    <Camera size={14} color="#FFF" />
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.userMeta}>
+                {!isEditing ? (
+                  <>
+                    <View style={styles.nameRow}>
+                      <Text style={styles.userName}>
+                        {profile?.display_name || profile?.username || 'User'}
+                      </Text>
+                      <View style={styles.levelPill}>
+                        <Text style={styles.levelPillText}>
+                          Lvl {profile?.current_level || 1}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.userHandle}>@{profile?.username || 'user'}</Text>
+                    <TouchableOpacity
+                      onPress={() => setIsEditing(true)}
+                      style={styles.editBtn}
+                      activeOpacity={0.7}
+                    >
+                      <Pencil size={13} color={C.primary} />
+                      <Text style={styles.editBtnText}>Edit Profile</Text>
+                    </TouchableOpacity>
+                  </>
                 ) : (
-                  <View style={styles.avatarLarge}>
-                    <Text style={styles.avatarText}>{userInitials}</Text>
+                  <View style={styles.editForm}>
+                    <Text style={styles.editLabel}>Display Name</Text>
+                    <TextInput
+                      style={styles.editInput}
+                      value={editName}
+                      onChangeText={setEditName}
+                      placeholder="Enter Display Name"
+                      placeholderTextColor={C.textMuted}
+                    />
+
+                    <Text style={styles.editLabel}>Username</Text>
+                    <TextInput
+                      style={styles.editInput}
+                      value={editUsername}
+                      onChangeText={setEditUsername}
+                      autoCapitalize="none"
+                      placeholder="Enter Username"
+                      placeholderTextColor={C.textMuted}
+                    />
+
+                    <View style={styles.editBtnRow}>
+                      <TouchableOpacity style={styles.saveBtn} onPress={handleSaveProfile}>
+                        <Text style={styles.saveBtnText}>Save</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsEditing(false)}>
+                        <Text style={styles.cancelBtnText}>Cancel</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 )}
-                <View style={styles.editAvatarBadge}>
-                  <Camera size={14} color="#FFF" />
+              </View>
+            </View>
+
+            {/* ─── Stats Row ─── */}
+            <View style={styles.statsRow}>
+              <View style={styles.statBox}>
+                <Text style={styles.statValue}>{totalDrops}</Text>
+                <Text style={styles.statLabel}>Total Drops</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statBox}>
+                <View style={styles.statValueRow}>
+                  <Text style={styles.statValue}>{currentStreak}</Text>
+                  <Flame size={16} color={C.accent} />
                 </View>
+                <Text style={styles.statLabel}>Day Streak</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statBox}>
+                <Text style={styles.statValue}>
+                  {totalDrops > 0 ? '100%' : '0%'}
+                </Text>
+                <Text style={styles.statLabel}>Accuracy</Text>
+              </View>
+            </View>
+
+            {/* ─── Preferences ─── */}
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Preferences</Text>
+
+              <View style={styles.settingRow}>
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingLabel}>Private by Default</Text>
+                  <Text style={styles.settingSub}>Keep new drops visible to friends only</Text>
+                </View>
+                <Switch
+                  value={privacy}
+                  onValueChange={setPrivacy}
+                  trackColor={{ false: C.warmSurface, true: C.primary }}
+                  thumbColor="#FFF"
+                />
+              </View>
+
+              <View style={styles.settingRow}>
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingLabel}>Push Notifications</Text>
+                  <Text style={styles.settingSub}>Alerts for leaderboard jumps and reactions</Text>
+                </View>
+                <Switch
+                  value={notifications}
+                  onValueChange={setNotifications}
+                  trackColor={{ false: C.warmSurface, true: C.primary }}
+                  thumbColor="#FFF"
+                />
+              </View>
+
+              <View style={styles.settingRow}>
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingLabel}>Haptic Feedback</Text>
+                  <Text style={styles.settingSub}>Vibrate on drop logging and upvotes</Text>
+                </View>
+                <Switch
+                  value={haptics}
+                  onValueChange={setHaptics}
+                  trackColor={{ false: C.warmSurface, true: C.primary }}
+                  thumbColor="#FFF"
+                />
+              </View>
+
+              <View style={[styles.settingRow, styles.settingRowLast]}>
+                <View style={styles.settingInfo}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={styles.settingLabel}>Stealth Mode</Text>
+                    <Ghost size={14} color={C.textSecondary} />
+                  </View>
+                  <Text style={styles.settingSub}>Hide your online indicator from feed</Text>
+                </View>
+                <Switch
+                  value={stealthMode}
+                  onValueChange={setStealthMode}
+                  trackColor={{ false: C.warmSurface, true: C.primary }}
+                  thumbColor="#FFF"
+                />
+              </View>
+            </View>
+
+            {/* ─── Actions ─── */}
+            <View style={styles.actionsGroup}>
+              <TouchableOpacity style={styles.actionRow} activeOpacity={0.7}>
+                <Package size={20} color={C.textPrimary} />
+                <Text style={styles.actionText}>Export Personal History</Text>
+                <ChevronRight size={18} color={C.textSecondary} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionRow, styles.actionRowDanger]}
+                activeOpacity={0.7}
+                onPress={signOut}
+              >
+                <LogOut size={20} color={C.danger} />
+                <Text style={styles.actionTextDanger}>Sign Out</Text>
               </TouchableOpacity>
             </View>
 
-            <View style={styles.userMeta}>
-              {!isEditing ? (
-                <>
-                  <View style={styles.nameRow}>
-                    <Text style={styles.userName}>
-                      {profile?.display_name || profile?.username || 'User'}
-                    </Text>
-                    <View style={styles.levelPill}>
-                      <Text style={styles.levelPillText}>
-                        Lvl {profile?.current_level || 1}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.userHandle}>@{profile?.username || 'user'}</Text>
-                  <TouchableOpacity
-                    onPress={() => setIsEditing(true)}
-                    style={styles.editBtn}
-                    activeOpacity={0.7}
-                  >
-                    <Pencil size={13} color={C.primary} />
-                    <Text style={styles.editBtnText}>Edit Profile</Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <View style={styles.editForm}>
-                  <Text style={styles.editLabel}>Display Name</Text>
-                  <TextInput
-                    style={styles.editInput}
-                    value={editName}
-                    onChangeText={setEditName}
-                    placeholder="Enter Display Name"
-                    placeholderTextColor={C.textMuted}
-                  />
-
-                  <Text style={styles.editLabel}>Username</Text>
-                  <TextInput
-                    style={styles.editInput}
-                    value={editUsername}
-                    onChangeText={setEditUsername}
-                    autoCapitalize="none"
-                    placeholder="Enter Username"
-                    placeholderTextColor={C.textMuted}
-                  />
-
-                  <View style={styles.editBtnRow}>
-                    <TouchableOpacity style={styles.saveBtn} onPress={handleSaveProfile}>
-                      <Text style={styles.saveBtnText}>Save</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsEditing(false)}>
-                      <Text style={styles.cancelBtnText}>Cancel</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-            </View>
-          </View>
-
-          {/* ─── Stats Row ─── */}
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{totalDrops}</Text>
-              <Text style={styles.statLabel}>Total Drops</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statBox}>
-              <View style={styles.statValueRow}>
-                <Text style={styles.statValue}>{currentStreak}</Text>
-                <Flame size={16} color={C.accent} />
-              </View>
-              <Text style={styles.statLabel}>Day Streak</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>
-                {totalDrops > 0 ? '100%' : '0%'}
-              </Text>
-              <Text style={styles.statLabel}>Accuracy</Text>
-            </View>
-          </View>
-
-          {/* ─── Preferences ─── */}
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Preferences</Text>
-
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Private by Default</Text>
-                <Text style={styles.settingSub}>Keep new drops visible to friends only</Text>
-              </View>
-              <Switch
-                value={privacy}
-                onValueChange={setPrivacy}
-                trackColor={{ false: C.warmSurface, true: C.primary }}
-                thumbColor="#FFF"
-              />
-            </View>
-
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Push Notifications</Text>
-                <Text style={styles.settingSub}>Alerts for leaderboard jumps and reactions</Text>
-              </View>
-              <Switch
-                value={notifications}
-                onValueChange={setNotifications}
-                trackColor={{ false: C.warmSurface, true: C.primary }}
-                thumbColor="#FFF"
-              />
-            </View>
-
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Haptic Feedback</Text>
-                <Text style={styles.settingSub}>Vibrate on drop logging and upvotes</Text>
-              </View>
-              <Switch
-                value={haptics}
-                onValueChange={setHaptics}
-                trackColor={{ false: C.warmSurface, true: C.primary }}
-                thumbColor="#FFF"
-              />
-            </View>
-
-            <View style={[styles.settingRow, styles.settingRowLast]}>
-              <View style={styles.settingInfo}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={styles.settingLabel}>Stealth Mode</Text>
-                  <Ghost size={14} color={C.textSecondary} />
-                </View>
-                <Text style={styles.settingSub}>Hide your online indicator from feed</Text>
-              </View>
-              <Switch
-                value={stealthMode}
-                onValueChange={setStealthMode}
-                trackColor={{ false: C.warmSurface, true: C.primary }}
-                thumbColor="#FFF"
-              />
-            </View>
-          </View>
-
-          {/* ─── Actions ─── */}
-          <View style={styles.actionsGroup}>
-            <TouchableOpacity style={styles.actionRow} activeOpacity={0.7}>
-              <Package size={20} color={C.textPrimary} />
-              <Text style={styles.actionText}>Export Personal History</Text>
-              <ChevronRight size={18} color={C.textSecondary} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionRow, styles.actionRowDanger]}
-              activeOpacity={0.7}
-              onPress={signOut}
-            >
-              <LogOut size={20} color={C.danger} />
-              <Text style={styles.actionTextDanger}>Sign Out</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={{ height: 100 }} />
-        </ScrollView>
-      </SafeAreaView>
-    </View>
+            <View style={{ height: 100 }} />
+          </ScrollView>
+        </SafeAreaView>
+      </View>
     </PageTransition>
   );
 }

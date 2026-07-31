@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AnimatedPressable } from '@/components/ui/AnimatedPressable';
+import { Emoji } from '@/components/ui/Emoji';
 import { colors, spacing, typography, borderRadius } from '@/theme';
 
 export type EmojiType = '🧻' | '👑' | '☣️' | '🚒';
@@ -43,7 +44,7 @@ export const ReactionBar: React.FC<ReactionBarProps> = ({
               hasReacted ? { backgroundColor: `${color}33`, borderColor: color } : styles.buttonInactive
             ])}
           >
-            <Text style={styles.emoji}>{emoji}</Text>
+            <Emoji symbol={emoji} size={18} />
             {count > 0 && (
               <Text style={[
                 typography.caption,

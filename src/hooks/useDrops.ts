@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
-import { useDropStore } from '@/stores/dropStore';
 import { storage } from '@/lib/mmkv';
-import * as Haptics from 'expo-haptics';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useDropStore } from '@/stores/dropStore';
 import type { BristolScale, Intensity, PrivacyLevel } from '@/types/database';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import * as Haptics from 'expo-haptics';
+import { useEffect } from 'react';
 
 /**
  * Primary hook for drop operations.
@@ -30,7 +30,7 @@ export const useDrops = () => {
 
   // Compute last drop time
   const lastDropTime = (() => {
-    const stored = storage.getString('kulapp:last_drop_time');
+    const stored = storage.getString('KulAPP:last_drop_time');
     if (!stored) return null;
     const date = new Date(stored);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

@@ -1,14 +1,14 @@
 /**
- * Leaderboard & Stats Screen — PoopTracker
+ * Leaderboard & Stats Screen — KulAPP
  * Native iOS 18 style leaderboard & personal statistics.
  */
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLeaderboardStore, LeaderboardUser } from '@/stores/leaderboardStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useDropStore } from '@/stores/dropStore';
-import { Trophy, Crown, Medal } from 'lucide-react-native';
+import { LeaderboardUser, useLeaderboardStore } from '@/stores/leaderboardStore';
+import { Crown, Medal, Trophy } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const DESIGN_COLORS = {
   background: '#2D1B15',
@@ -143,10 +143,10 @@ export default function LeaderboardScreen() {
             {rankedUsers.map((user: LeaderboardUser, idx: number) => {
               const isMe = user.username.includes('(You)');
               return (
-                <View 
-                  key={user.id || idx} 
+                <View
+                  key={user.id || idx}
                   style={[
-                    styles.rankRow, 
+                    styles.rankRow,
                     isMe && styles.myRankRow,
                     idx === rankedUsers.length - 1 && styles.noBorder
                   ]}

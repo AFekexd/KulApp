@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, ScrollView, View } from 'react-native';
 import { AnimatedPressable } from '@/components/ui/AnimatedPressable';
+import { Emoji } from '@/components/ui/Emoji';
 import { colors, spacing, typography, borderRadius } from '@/theme';
 
 export type BristolScale = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -47,7 +48,7 @@ export const BristolSelector: React.FC<BristolSelectorProps> = ({ selected, onSe
                 isSelected ? { borderColor: colors.mint, backgroundColor: 'rgba(0,0,0,0.05)' } : undefined
               ])}
             >
-              <Text style={styles.emoji}>{type.emoji}</Text>
+              <Emoji symbol={type.emoji} size={28} style={{ marginBottom: spacing.xs }} />
               <Text style={[
                 typography.caption, 
                 styles.name,

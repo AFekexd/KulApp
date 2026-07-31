@@ -8,6 +8,7 @@ import Animated, {
   withTiming
 } from 'react-native-reanimated';
 import { colors, spacing, typography } from '@/theme';
+import { Emoji } from '@/components/ui/Emoji';
 
 export interface StreakCounterProps {
   /** The current streak count */
@@ -65,7 +66,7 @@ export const StreakCounter: React.FC<StreakCounterProps> = ({ count }) => {
         ]}>
           {displayCount}
         </Text>
-        <Text style={styles.emoji}>🔥</Text>
+        <Emoji symbol="🔥" size={48} style={{ marginLeft: spacing.sm }} />
       </View>
       <Text style={[typography.body, styles.label]}>day streak</Text>
     </Animated.View>
