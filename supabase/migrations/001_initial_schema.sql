@@ -17,28 +17,11 @@ CREATE TABLE profiles (
   username TEXT UNIQUE NOT NULL,
   display_name TEXT,
   avatar_url TEXT,
-  default_privacy TEXT DEFAULT 'FRIENDS'
-    CHECK (default_privacy IN ('PRIVATE', 'FRIENDS', 'GROUP')),
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 COMMENT ON TABLE profiles IS 'User profiles — extends Supabase auth.users';
-COMMENT ON COLUMN profiles.default_privacy IS 'Default privacy level for new drops: PRIVATE, FRIENDS, or GROUP';
-
--- FRIENDSHIPS — Bidirectional friend connections
-CREATE TABLE friendships (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_a UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
-  user_b UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
-  status TEXT DEFAULT 'PENDING'
-    CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED')),
-  created_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(user_a, user_b),
-  CHECK (user_a < user_b) -- Canonical ordering prevents duplicate reverse pairs
-);
-
-COMMENT ON TABLE friendships IS 'Bidirectional friendships. user_a < user_b enforced for uniqueness.';
 
 -- GROUPS — Social groups (e.g., "Dorm 3rd Floor")
 CREATE TABLE groups (
@@ -73,8 +56,6 @@ CREATE TABLE drops (
     CHECK (intensity IN ('LIGHT', 'NORMAL', 'HEAVY_ARTILLERY')),
   custom_title TEXT,
   photo_url TEXT,
-  privacy_level TEXT NOT NULL DEFAULT 'PRIVATE'
-    CHECK (privacy_level IN ('PRIVATE', 'FRIENDS', 'GROUP')),
   target_group_id UUID REFERENCES groups(id) ON DELETE SET NULL,
   duration_seconds INTEGER, -- Optional: time spent
   notes TEXT,              -- Optional: private notes
@@ -107,7 +88,6 @@ COMMENT ON TABLE reactions IS 'Emoji reactions on drops: 🧻 TP, 👑 Crown, �
 CREATE INDEX idx_drops_user_id ON drops(user_id);
 CREATE INDEX idx_drops_created_at ON drops(created_at DESC);
 CREATE INDEX idx_drops_user_date ON drops(user_id, created_at DESC);
-CREATE INDEX idx_drops_privacy ON drops(privacy_level);
 CREATE INDEX idx_drops_group ON drops(target_group_id) WHERE target_group_id IS NOT NULL;
 
 -- Group members: fast membership checks
@@ -117,17 +97,11 @@ CREATE INDEX idx_group_members_user ON group_members(user_id);
 CREATE INDEX idx_reactions_drop ON reactions(drop_id);
 CREATE INDEX idx_reactions_user ON reactions(user_id);
 
--- Friendships: fast friend lookup for both users
-CREATE INDEX idx_friendships_user_a ON friendships(user_a);
-CREATE INDEX idx_friendships_user_b ON friendships(user_b);
-CREATE INDEX idx_friendships_status ON friendships(status) WHERE status = 'ACCEPTED';
-
 -- ============================================================================
 -- ROW LEVEL SECURITY (RLS)
 -- ============================================================================
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE friendships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE group_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE drops ENABLE ROW LEVEL SECURITY;
@@ -146,23 +120,6 @@ CREATE POLICY "profiles_update_own"
   ON profiles FOR UPDATE
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
-
--- ---- FRIENDSHIPS ----
-CREATE POLICY "friendships_select_own"
-  ON friendships FOR SELECT
-  USING (auth.uid() = user_a OR auth.uid() = user_b);
-
-CREATE POLICY "friendships_insert_own"
-  ON friendships FOR INSERT
-  WITH CHECK (auth.uid() = user_a OR auth.uid() = user_b);
-
-CREATE POLICY "friendships_update_own"
-  ON friendships FOR UPDATE
-  USING (auth.uid() = user_a OR auth.uid() = user_b);
-
-CREATE POLICY "friendships_delete_own"
-  ON friendships FOR DELETE
-  USING (auth.uid() = user_a OR auth.uid() = user_b);
 
 -- ---- GROUPS ----
 CREATE POLICY "groups_select_member"
@@ -208,27 +165,10 @@ CREATE POLICY "drops_select_own"
   ON drops FOR SELECT
   USING (user_id = auth.uid());
 
--- Users can see FRIENDS-level drops from accepted friends
-CREATE POLICY "drops_select_friends"
-  ON drops FOR SELECT
-  USING (
-    privacy_level = 'FRIENDS'
-    AND EXISTS (
-      SELECT 1 FROM friendships
-      WHERE status = 'ACCEPTED'
-      AND (
-        (user_a = auth.uid() AND user_b = drops.user_id)
-        OR (user_b = auth.uid() AND user_a = drops.user_id)
-      )
-    )
-  );
-
 -- Users can see GROUP-level drops if they're in the target group
 CREATE POLICY "drops_select_group"
   ON drops FOR SELECT
   USING (
-    privacy_level = 'GROUP'
-    AND target_group_id IS NOT NULL
     AND EXISTS (
       SELECT 1 FROM group_members
       WHERE group_id = drops.target_group_id

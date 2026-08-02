@@ -9,12 +9,15 @@ export interface FeedItem {
   intensity: number;
   size_badge: 'Tiny' | 'Small' | 'Medium' | 'Large' | 'Massive';
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   verification_pct: number;
   reactions_count: number;
   is_upvoted?: boolean;
-  privacy_level: string;
   created_at: string;
   custom_title: string | null;
+  target_group_id?: string | null;
+  groups?: { name: string } | null;
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -78,12 +81,15 @@ export const useFeedStore = create<FeedState>((set, get) => ({
       intensity: newItemData.intensity || 3,
       size_badge: newItemData.size_badge || 'Medium',
       location: newItemData.location || 'Oak Street',
+      latitude: newItemData.latitude ?? null,
+      longitude: newItemData.longitude ?? null,
       verification_pct: 100,
       reactions_count: 0,
       is_upvoted: false,
-      privacy_level: newItemData.privacy_level || 'public',
       created_at: new Date().toISOString(),
       custom_title: newItemData.custom_title || 'Fresh Drop',
+      target_group_id: newItemData.target_group_id || null,
+      groups: newItemData.groups || null,
       profiles: {
         username: newItemData.profiles?.username || 'User',
         avatar_url: newItemData.profiles?.avatar_url || null,
@@ -107,7 +113,9 @@ export const useFeedStore = create<FeedState>((set, get) => ({
           user_id,
           bristol_scale,
           intensity,
-          privacy_level,
+          location_name,
+          latitude,
+          longitude,
           created_at,
           custom_title,
           profiles:user_id ( username, display_name, avatar_url )
@@ -122,13 +130,16 @@ export const useFeedStore = create<FeedState>((set, get) => ({
           bristol_scale: item.bristol_scale || 4,
           intensity: item.intensity === 'HEAVY_ARTILLERY' ? 4 : 2,
           size_badge: item.intensity === 'HEAVY_ARTILLERY' ? 'Large' : 'Medium',
-          location: 'Oak Street',
+          location: item.location_name || 'Oak Street',
+          latitude: item.latitude ?? null,
+          longitude: item.longitude ?? null,
           verification_pct: 100,
           reactions_count: 0,
           is_upvoted: false,
-          privacy_level: item.privacy_level || 'public',
           created_at: item.created_at || new Date().toISOString(),
           custom_title: item.custom_title || 'Community Drop',
+          target_group_id: item.target_group_id,
+          groups: item.groups || null,
           profiles: {
             username: item.profiles?.display_name || item.profiles?.username || 'User',
             avatar_url: item.profiles?.avatar_url || null,

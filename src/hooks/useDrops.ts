@@ -1,6 +1,6 @@
 import { storage } from '@/lib/mmkv';
 import { useDropStore } from '@/stores/dropStore';
-import type { BristolScale, Intensity, PrivacyLevel } from '@/types/database';
+import type { BristolScale, Intensity } from '@/types/database';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { useEffect } from 'react';
@@ -60,7 +60,6 @@ export const useRecordDrop = () => {
     mutationFn: async (params: {
       bristolScale?: BristolScale;
       intensity?: Intensity;
-      privacyLevel: PrivacyLevel;
       targetGroupId?: string;
       customTitle?: string;
     }) => {

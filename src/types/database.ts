@@ -6,7 +6,6 @@
 export type BristolScale = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export type SizeBadge = 'Tiny' | 'Small' | 'Medium' | 'Large' | 'Massive';
 export type Intensity = 'LIGHT' | 'NORMAL' | 'HEAVY_ARTILLERY';
-export type PrivacyLevel = 'PRIVATE' | 'FRIENDS' | 'GROUP';
 export type EmojiType = 'TP' | 'CROWN' | 'BIOHAZARD' | 'FIRE';
 
 export interface Database {
@@ -21,7 +20,6 @@ export interface Database {
           current_level: number;
           total_xp: number;
           streak_days: number;
-          default_privacy: PrivacyLevel;
           created_at?: string;
           updated_at?: string;
         };
@@ -33,7 +31,6 @@ export interface Database {
           current_level?: number;
           total_xp?: number;
           streak_days?: number;
-          default_privacy?: PrivacyLevel;
           created_at?: string;
           updated_at?: string;
         };
@@ -44,7 +41,6 @@ export interface Database {
           current_level?: number;
           total_xp?: number;
           streak_days?: number;
-          default_privacy?: PrivacyLevel;
           updated_at?: string;
         };
       };
@@ -57,11 +53,12 @@ export interface Database {
           verification_score: number;
           reaction_count: number;
           photo_url: string | null;
-          privacy_level: PrivacyLevel;
           custom_title?: string | null;
           bristol_scale?: BristolScale;
           intensity?: Intensity;
           target_group_id?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
           created_at: string;
         };
         Insert: {
@@ -72,11 +69,12 @@ export interface Database {
           verification_score?: number;
           reaction_count?: number;
           photo_url?: string | null;
-          privacy_level?: PrivacyLevel;
           custom_title?: string | null;
           bristol_scale?: BristolScale;
           intensity?: Intensity;
           target_group_id?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
           created_at?: string;
         };
         Update: {
@@ -85,9 +83,10 @@ export interface Database {
           verification_score?: number;
           reaction_count?: number;
           photo_url?: string | null;
-          privacy_level?: PrivacyLevel;
           custom_title?: string | null;
           target_group_id?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
         };
       };
       groups: {
@@ -159,7 +158,6 @@ export interface UserPreferences {
   hapticFeedback: boolean;
   soundEffects: boolean;
   stealthMode: boolean;
-  defaultPrivacy: PrivacyLevel;
 }
 
 export const DEFAULT_USER_PREFERENCES: UserPreferences = {
@@ -167,5 +165,4 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
   hapticFeedback: true,
   soundEffects: true,
   stealthMode: false,
-  defaultPrivacy: 'FRIENDS',
 };

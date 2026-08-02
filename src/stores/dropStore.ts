@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase';
 import { storage } from '@/lib/mmkv';
-import type { Drop, DropInsert, BristolScale, Intensity, PrivacyLevel } from '@/types/database';
+import type { Drop, DropInsert, BristolScale, Intensity } from '@/types/database';
 
 // ============================================================================
 // Types
@@ -10,9 +10,11 @@ import type { Drop, DropInsert, BristolScale, Intensity, PrivacyLevel } from '@/
 interface RecordDropParams {
   bristolScale?: BristolScale;
   intensity?: Intensity;
-  privacyLevel: PrivacyLevel;
   targetGroupId?: string;
   customTitle?: string;
+  locationName?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface DropState {
@@ -21,7 +23,9 @@ interface DropState {
   currentStreak: number;
   isRecording: boolean;
   pendingSync: DropInsert[];
+  selectedMapLocation: { latitude: number; longitude: number } | null;
 
+  setSelectedMapLocation: (location: { latitude: number; longitude: number } | null) => void;
   recordDrop: (params: RecordDropParams) => Promise<void>;
   syncPendingDrops: () => Promise<void>;
   fetchUserDrops: (userId: string, limit?: number) => Promise<void>;
@@ -75,6 +79,9 @@ export const useDropStore = create<DropState>((set, get) => ({
   currentStreak: 0,
   isRecording: false,
   pendingSync: [],
+  selectedMapLocation: null,
+
+  setSelectedMapLocation: (location) => set({ selectedMapLocation: location }),
 
   /**
    * Load persisted state from MMKV.
@@ -163,9 +170,11 @@ export const useDropStore = create<DropState>((set, get) => ({
         user_id: userId,
         bristol_scale: params.bristolScale ?? 4,
         intensity: params.intensity ?? 'NORMAL',
-        privacy_level: params.privacyLevel,
         target_group_id: params.targetGroupId ?? null,
         custom_title: params.customTitle ?? null,
+        location_name: params.locationName ?? null,
+        latitude: params.latitude ?? null,
+        longitude: params.longitude ?? null,
         created_at: new Date().toISOString(),
       };
 

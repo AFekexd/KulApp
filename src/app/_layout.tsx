@@ -12,6 +12,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useEffect, useState } from 'react';
 import { Colors } from '@/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { useGroupStore } from '@/stores/groupStore';
 import {
   useFonts,
   Nunito_700Bold,
@@ -36,6 +37,8 @@ const queryClient = new QueryClient();
 export default function RootLayout() {
   const { initialize, isInitialized, isAuthenticated } = useAuth();
   const [appIsReady, setAppIsReady] = useState(false);
+  const { groups, fetchUserGroups } = useGroupStore();
+  const [groupChecked, setGroupChecked] = useState(false);
   const segments = useSegments();
   const router = useRouter();
 
@@ -63,23 +66,34 @@ export default function RootLayout() {
   }, [initialize]);
 
   useEffect(() => {
-    if (appIsReady && isInitialized && fontsLoaded) {
-      // Hide splash screen once we know auth state and fonts are loaded
+    if (isAuthenticated) {
+      fetchUserGroups().then(() => setGroupChecked(true));
+    } else {
+      setGroupChecked(true);
+    }
+  }, [isAuthenticated, fetchUserGroups]);
+
+  useEffect(() => {
+    if (appIsReady && isInitialized && fontsLoaded && groupChecked) {
       SplashScreen.hideAsync();
 
       const inAuthGroup = segments[0] === '(auth)';
+      const inNoGroup = segments[0] === '(no-group)';
 
-      // Defer navigation to next tick so the navigator is fully mounted
       if (!isAuthenticated && !inAuthGroup) {
         setTimeout(() => router.replace('/(auth)/sign-in'), 0);
-      } else if (isAuthenticated && inAuthGroup) {
-        setTimeout(() => router.replace('/(tabs)'), 0);
+      } else if (isAuthenticated) {
+        if (groups.length === 0 && !inNoGroup) {
+          setTimeout(() => router.replace('/(no-group)'), 0);
+        } else if (groups.length > 0 && (inAuthGroup || inNoGroup)) {
+          setTimeout(() => router.replace('/(tabs)'), 0);
+        }
       }
     }
-  }, [appIsReady, isInitialized, isAuthenticated, fontsLoaded, segments, router]);
+  }, [appIsReady, isInitialized, isAuthenticated, fontsLoaded, groupChecked, groups.length, segments, router]);
 
 
-  if (!appIsReady || !isInitialized || !fontsLoaded) {
+  if (!appIsReady || !isInitialized || !fontsLoaded || !groupChecked) {
     return null;
   }
 
@@ -96,6 +110,7 @@ export default function RootLayout() {
           >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(no-group)" options={{ headerShown: false, animation: 'fade' }} />
             <Stack.Screen
               name="(modals)"
               options={{

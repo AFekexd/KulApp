@@ -6,11 +6,16 @@
 import { useAuthStore } from '@/stores/authStore';
 import { useDropStore } from '@/stores/dropStore';
 import { useFeedStore } from '@/stores/feedStore';
+import { useGroupStore } from '@/stores/groupStore';
+import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import gsap from 'gsap';
-import { ChevronLeft, ChevronRight, Globe, Lock, MapPin, Plus, Users, X } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Home, Map, MapPin, Navigation, Plus, Users, X } from 'lucide-react-native';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   Easing,
   KeyboardAvoidingView,
@@ -56,17 +61,23 @@ export default function QuickDropModal() {
   const { recordDrop } = useDropStore();
   const { feedItems, addFeedItem } = useFeedStore();
   const { profile } = useAuthStore();
+  const { groups, fetchUserGroups } = useGroupStore();
+  const { selectedMapLocation, setSelectedMapLocation } = useDropStore();
 
   const [bristolScale, setBristolScale] = useState<number>(4);
   const [sizeBadge, setSizeBadge] = useState<'Tiny' | 'Small' | 'Medium' | 'Large' | 'Massive'>('Medium');
 
-  // Location is EMPTY by default as requested!
   const [locationSearch, setLocationSearch] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('');
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
   const [customTitle, setCustomTitle] = useState<string>('');
-  const [privacy, setPrivacy] = useState<'public' | 'friends' | 'group' | 'private'>('public');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // GPS State
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
 
   // Animation & Scroll refs
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -95,17 +106,16 @@ export default function QuickDropModal() {
   }, [availableLocations, locationSearch]);
 
   useEffect(() => {
-    // 1. Web GSAP Animation
+    fetchUserGroups();
+  }, []);
+
+  useEffect(() => {
     if (Platform.OS === 'web' && sheetRef.current && backdropRef.current) {
-      gsap.fromTo(
-        backdropRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.3, ease: 'power2.out' }
-      );
+      gsap.to(backdropRef.current, { opacity: 1, duration: 0.3 });
       gsap.fromTo(
         sheetRef.current,
         { y: 350, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.45, ease: 'power3.out' }
+        { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' }
       );
     }
 
@@ -113,17 +123,24 @@ export default function QuickDropModal() {
     Animated.parallel([
       Animated.timing(backdropAnim, {
         toValue: 1,
-        duration: 300,
+        duration: 350,
         useNativeDriver: Platform.OS !== 'web',
       }),
       Animated.timing(sheetTranslateY, {
         toValue: 0,
-        duration: 400,
-        easing: Easing.out(Easing.back(1)),
+        duration: 450,
+        easing: Easing.out(Easing.back(0.8)),
         useNativeDriver: Platform.OS !== 'web',
       }),
     ]).start();
   }, [backdropAnim, sheetTranslateY]);
+
+  // Set default group if not selected
+  useEffect(() => {
+    if (groups.length > 0 && !selectedGroup) {
+      setSelectedGroup(groups[0].id);
+    }
+  }, [groups]);
 
   const handleClose = () => {
     if (Platform.OS === 'web' && sheetRef.current && backdropRef.current) {
@@ -133,7 +150,13 @@ export default function QuickDropModal() {
         opacity: 0,
         duration: 0.25,
         ease: 'power2.in',
-        onComplete: () => router.back(),
+        onComplete: () => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.push('/(tabs)');
+          }
+        },
       });
       return;
     }
@@ -150,7 +173,11 @@ export default function QuickDropModal() {
         useNativeDriver: Platform.OS !== 'web',
       }),
     ]).start(() => {
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.push('/(tabs)');
+      }
     });
   };
 
@@ -161,18 +188,105 @@ export default function QuickDropModal() {
     }
   };
 
+  const performReverseGeocoding = async (lat: number, lon: number) => {
+    setIsLocating(true);
+    let locationName = '';
+
+    // 1. Try Native Geocoding (Not supported on Web)
+    if (Platform.OS !== 'web') {
+      try {
+        const reverseGeocode = await Location.reverseGeocodeAsync({
+          latitude: lat,
+          longitude: lon,
+        });
+        if (reverseGeocode && reverseGeocode.length > 0) {
+          const place = reverseGeocode[0];
+          locationName = [place.city || place.subregion || place.region, place.street || place.name].filter(Boolean).join(', ').trim();
+        }
+      } catch (e) {
+        console.warn('Native reverse geocoding failed', e);
+      }
+    }
+
+    // 2. Try Nominatim (OpenStreetMap) Fallback (For Web or if Native fails)
+    if (!locationName) {
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+        const data = await response.json();
+        if (data && data.address) {
+          locationName = [
+            data.address.city || data.address.town || data.address.village || data.address.county,
+            data.address.road || data.address.pedestrian
+          ].filter(Boolean).join(', ').trim();
+        }
+      } catch (e) {
+        console.warn('Nominatim fallback failed', e);
+      }
+    }
+
+    // 3. Fallback to Coordinates if all APIs fail
+    if (locationName) {
+      setLocationSearch(locationName);
+      setSelectedLocation(locationName);
+    } else {
+      const fallback = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+      setLocationSearch(fallback);
+      setSelectedLocation(fallback);
+    }
+    
+    setIsLocating(false);
+  };
+
+  useEffect(() => {
+    if (selectedMapLocation) {
+      const { latitude: lat, longitude: lon } = selectedMapLocation;
+      setLatitude(lat);
+      setLongitude(lon);
+      setSelectedMapLocation(null);
+      performReverseGeocoding(lat, lon);
+    }
+  }, [selectedMapLocation]);
+
+  const handleGetLocation = async () => {
+    setIsLocating(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Please enable location services in your settings to use this feature.');
+        setIsLocating(false);
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const { coords } = location;
+      setLatitude(coords.latitude);
+      setLongitude(coords.longitude);
+
+      await performReverseGeocoding(coords.latitude, coords.longitude);
+    } catch (error) {
+      console.error(error);
+      alert('Failed to fetch location.');
+      setIsLocating(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
 
     const finalLocation = selectedLocation.trim() || locationSearch.trim() || 'Unknown Location';
     const titleToUse = customTitle.trim() || `${finalLocation} Session 💩`;
+    const finalGroup = selectedGroup || null;
+    const finalGroupObj = groups.find(g => g.id === finalGroup);
 
     await recordDrop({
       bristolScale: bristolScale as any,
       intensity: sizeBadge === 'Massive' ? 'HEAVY_ARTILLERY' : sizeBadge === 'Large' ? 'HEAVY_ARTILLERY' : 'NORMAL',
-      privacyLevel: privacy === 'private' ? 'PRIVATE' : privacy === 'group' ? 'GROUP' : 'FRIENDS',
       customTitle: titleToUse,
+      targetGroupId: finalGroup,
+      locationName: finalLocation,
+      latitude: latitude ?? undefined,
+      longitude: longitude ?? undefined,
     });
 
     addFeedItem({
@@ -181,8 +295,11 @@ export default function QuickDropModal() {
       intensity: sizeBadge === 'Massive' ? 5 : sizeBadge === 'Large' ? 4 : sizeBadge === 'Medium' ? 3 : 2,
       size_badge: sizeBadge,
       location: finalLocation,
+      latitude: latitude,
+      longitude: longitude,
       custom_title: titleToUse,
-      privacy_level: privacy,
+      target_group_id: finalGroup,
+      groups: finalGroupObj ? { name: finalGroupObj.name } : null,
       profiles: {
         username: activeUsername,
         avatar_url: profile?.avatar_url || null,
@@ -194,37 +311,19 @@ export default function QuickDropModal() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.overlay}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      {/* Translucent Dimmed Backdrop Overlay */}
-      <Animated.View
-        ref={backdropRef as any}
-        style={[
-          styles.backdrop,
-          {
-            opacity: backdropAnim,
-          },
-        ]}
-      >
+    <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Animated.View style={[styles.backdrop, { opacity: backdropAnim }]} ref={backdropRef as any}>
+        {Platform.OS !== 'web' && (
+           <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFillObject} />
+        )}
         <TouchableOpacity
           style={StyleSheet.absoluteFill}
           activeOpacity={1}
           onPress={handleClose}
         />
       </Animated.View>
-
-      {/* GSAP Smooth Animated Bottom Sheet */}
-      <Animated.View
-        ref={sheetRef as any}
-        style={[
-          styles.sheetContainer,
-          {
-            transform: [{ translateY: sheetTranslateY }],
-          },
-        ]}
-      >
+      <Animated.View style={[styles.sheetContainer, { transform: [{ translateY: sheetTranslateY }] }]} ref={sheetRef as any}>
+        {/* Handle */}
         <View style={styles.sheetHandle} />
 
         {/* Modal Header */}
@@ -236,6 +335,33 @@ export default function QuickDropModal() {
         </View>
 
         <ScrollView contentContainerStyle={styles.formContent} showsVerticalScrollIndicator={false}>
+          
+          {/* Section 0: Select Group */}
+          {groups.length > 0 && (
+            <View style={styles.formSection}>
+              <Text style={styles.sectionLabel}>Post To Group</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgeWrapRow}>
+                {groups.map((g) => {
+                  const isSelected = selectedGroup === g.id;
+                  return (
+                    <TouchableOpacity
+                      key={g.id}
+                      style={[styles.locOptionBtn, isSelected && styles.locOptionActive]}
+                      onPress={() => setSelectedGroup(g.id)}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Home size={12} color={isSelected ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary} />
+                        <Text style={[styles.locOptionText, isSelected && styles.locOptionTextActive]}>
+                          {g.name}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          )}
+
           {/* Section 1: Texture (Bristol Scale) */}
           <View style={styles.formSection}>
             <View style={styles.sectionTitleRow}>
@@ -301,7 +427,34 @@ export default function QuickDropModal() {
 
           {/* Section 3: Location (Search & Custom Selection) */}
           <View style={styles.formSection}>
-            <Text style={styles.sectionLabel}>3. Location</Text>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionLabel}>3. Location</Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity
+                  style={styles.gpsBtn}
+                  onPress={handleGetLocation}
+                  disabled={isLocating}
+                >
+                  {isLocating ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Navigation size={14} color={DESIGN_COLORS.textPrimary} />
+                      <Text style={styles.gpsBtnText}>Locate Me</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.mapBtn}
+                  onPress={() => router.push('/(modals)/map-picker')}
+                  disabled={isLocating}
+                >
+                  <Map size={14} color={DESIGN_COLORS.textPrimary} />
+                  <Text style={styles.gpsBtnText}>Map</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 
             {/* Location Search Input */}
             <TextInput
@@ -367,64 +520,27 @@ export default function QuickDropModal() {
               maxLength={40}
             />
           </View>
-
-          {/* Section 5: Privacy */}
-          <View style={styles.formSection}>
-            <Text style={styles.sectionLabel}>5. Audience Privacy & Group Targeting</Text>
-            <View style={styles.privacyRow}>
-              {(['public', 'friends', 'group', 'private'] as const).map((p) => (
-                <TouchableOpacity
-                  key={p}
-                  style={[styles.privacyBtn, privacy === p && styles.privacyBtnActive]}
-                  onPress={() => setPrivacy(p)}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    {p === 'public' ? <Globe size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} /> :
-                      p === 'friends' ? <Users size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} /> :
-                        p === 'group' ? <Users size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} /> :
-                          <Lock size={12} color={privacy === p ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
-                    <Text style={[styles.privacyText, privacy === p && styles.privacyTextActive]}>
-                      {p === 'public' ? 'Public' : p === 'friends' ? 'Friends' : p === 'group' ? 'Group' : 'Private'}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {privacy === 'group' && (
-              <View style={{ marginTop: 6, gap: 6 }}>
-                <Text style={styles.subLabel}>Target Group:</Text>
-                <View style={styles.badgeWrapRow}>
-                  {['Dorm 3rd Floor 🏢', 'Office Squad ☕', 'Weekend Poopers 💩'].map((g) => (
-                    <TouchableOpacity
-                      key={g}
-                      style={[styles.locOptionBtn, styles.locOptionActive]}
-                    >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                        <Users size={12} color={DESIGN_COLORS.primary} />
-                        <Text style={styles.locOptionTextActive}>{g}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            )}
-          </View>
-        </ScrollView>
-
-        {/* Submit Button */}
+        {/* Submit */}
         <View style={styles.footerRow}>
           <TouchableOpacity
-            style={[styles.submitBtn, isSubmitting && styles.submitBtnDisabled]}
-            activeOpacity={0.8}
+            style={styles.submitBtn}
             onPress={handleSubmit}
             disabled={isSubmitting}
+            activeOpacity={0.8}
           >
-            <Text style={styles.submitBtnText}>
-              {isSubmitting ? 'Logging Drop...' : 'LOG THIS DROP 💩'}
-            </Text>
+            <LinearGradient
+              colors={['#A95C33', '#8D6E63']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.submitGradient}
+            >
+              <Text style={styles.submitBtnText}>
+                {isSubmitting ? 'LOGGING...' : 'LOG THIS DROP 💩'}
+              </Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
+        </ScrollView>
       </Animated.View>
     </KeyboardAvoidingView>
   );
@@ -438,34 +554,35 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
   },
   sheetContainer: {
-    backgroundColor: DESIGN_COLORS.card,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    backgroundColor: '#38221D',
+    borderTopLeftRadius: 36,
+    borderTopRightRadius: 36,
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 36 : 20,
-    maxHeight: '85%',
+    paddingBottom: Platform.OS === 'ios' ? 44 : 24,
+    maxHeight: '90%',
     gap: 16,
     ...Platform.select({
       ios: {
-        shadowColor: '#1A0E0B',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
       },
-      android: { elevation: 12 },
-      web: { boxShadow: '0 -4px 24px rgba(26,14,11,0.2)' },
+      android: { elevation: 20 },
+      web: { boxShadow: '0 -6px 30px rgba(0,0,0,0.3)' },
     }),
   },
   sheetHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: DESIGN_COLORS.border,
+    width: 44,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignSelf: 'center',
+    marginBottom: 4,
   },
   headerRow: {
     flexDirection: 'row',
@@ -485,14 +602,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeBtnText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Bold',
-    color: DESIGN_COLORS.textSecondary,
-  },
   formContent: {
     gap: 20,
-    paddingBottom: 10,
+    paddingBottom: 40,
   },
   formSection: {
     gap: 8,
@@ -527,47 +639,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scrollArrowText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Bold',
-    color: DESIGN_COLORS.textPrimary,
-    marginTop: -2,
-  },
   bristolRow: {
-    gap: 10,
+    gap: 12,
     paddingRight: 10,
-    ...Platform.select({
-      web: {
-        cursor: 'pointer' as any,
-      },
-    }),
+    paddingVertical: 8,
   },
   bristolCard: {
-    width: 105,
-    backgroundColor: '#4E342E',
-    borderRadius: 16,
+    width: 110,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-    padding: 10,
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingVertical: 14,
+    paddingHorizontal: 10,
     alignItems: 'center',
-    gap: 2,
+    gap: 4,
   },
   bristolCardActive: {
-    backgroundColor: DESIGN_COLORS.primary,
-    borderColor: DESIGN_COLORS.primary,
+    backgroundColor: 'rgba(169, 92, 51, 0.2)',
+    borderColor: DESIGN_COLORS.secondary,
   },
   bristolEmoji: {
-    fontSize: 24,
+    fontSize: 28,
+    marginBottom: 2,
   },
   bristolScaleNum: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'Inter-Bold',
     color: DESIGN_COLORS.textPrimary,
   },
   bristolName: {
-    fontSize: 10,
-    fontFamily: 'Inter-Regular',
+    fontSize: 11,
+    fontFamily: 'Inter-Medium',
     color: DESIGN_COLORS.textSecondary,
+    textAlign: 'center',
   },
   textWhite: {
     color: '#FFFFFF',
@@ -618,72 +723,73 @@ const styles = StyleSheet.create({
     color: DESIGN_COLORS.textSecondary,
   },
   locOptionTextActive: {
-    color: DESIGN_COLORS.primary,
+    color: DESIGN_COLORS.secondary,
     fontFamily: 'Inter-Bold',
   },
-  textInput: {
-    backgroundColor: '#4E342E',
+  gpsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(169, 92, 51, 0.2)',
     borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    borderColor: 'rgba(169, 92, 51, 0.5)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  gpsBtnText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Bold',
+    color: DESIGN_COLORS.textPrimary,
+  },
+  mapBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  textInput: {
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 14,
     color: DESIGN_COLORS.textPrimary,
   },
-  privacyRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  privacyBtn: {
-    flex: 1,
-    backgroundColor: '#4E342E',
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: DESIGN_COLORS.border,
-    alignItems: 'center',
-  },
-  privacyBtnActive: {
-    backgroundColor: DESIGN_COLORS.primary,
-    borderColor: DESIGN_COLORS.primary,
-  },
-  privacyText: {
-    fontSize: 12,
-    fontFamily: 'Inter-SemiBold',
-    color: DESIGN_COLORS.textSecondary,
-  },
-  privacyTextActive: {
-    color: '#FFFFFF',
-    fontFamily: 'Inter-Bold',
-  },
   footerRow: {
-    marginTop: 4,
+    marginTop: 10,
   },
   submitBtn: {
-    backgroundColor: DESIGN_COLORS.primary,
-    paddingVertical: 16,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 20,
+    overflow: 'hidden',
     ...Platform.select({
       ios: {
-        shadowColor: DESIGN_COLORS.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
+        shadowColor: DESIGN_COLORS.secondary,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
       },
-      android: { elevation: 4 },
-      web: { boxShadow: '0 4px 8px rgba(141, 110, 99, 0.25)' },
+      android: { elevation: 8 },
+      web: { boxShadow: '0 6px 20px rgba(169, 92, 51, 0.4)' },
     }),
   },
-  submitBtnDisabled: {
-    opacity: 0.6,
+  submitGradient: {
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   submitBtnText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
 });
+

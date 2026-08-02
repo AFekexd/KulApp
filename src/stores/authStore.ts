@@ -19,7 +19,6 @@ const DEFAULT_PROFILE: Profile = {
   current_level: 1,
   total_xp: 0,
   streak_days: 0,
-  default_privacy: 'FRIENDS',
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
@@ -122,7 +121,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         current_level: 1,
         total_xp: 0,
         streak_days: 0,
-        default_privacy: 'FRIENDS',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -155,7 +153,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         current_level: 1,
         total_xp: 0,
         streak_days: 0,
-        default_privacy: 'FRIENDS',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -305,7 +302,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       current_level: 1,
       total_xp: 0,
       streak_days: 0,
-      default_privacy: 'PRIVATE',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -339,7 +335,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           current_level: 1,
           total_xp: 0,
           streak_days: 0,
-          default_privacy: 'PRIVATE',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }, 

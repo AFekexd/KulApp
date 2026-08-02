@@ -1,11 +1,12 @@
 /**
  * Tabs Layout — KulAPP
  * High-fidelity, floating glassmorphism tab bar with a prominent FAB.
+ * Completely rewritten with a Custom Tab Bar for pixel-perfect overflow and positioning.
  */
 import { BlurView } from 'expo-blur';
 import { Tabs, useRouter } from 'expo-router';
-import { Home, Rss, User, Users } from 'lucide-react-native';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Home, Plus, Rss, User, Users } from 'lucide-react-native';
+import { Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DESIGN_COLORS = {
@@ -21,168 +22,160 @@ const DESIGN_COLORS = {
   border: '#5D4037',
 };
 
+// Custom Tab Bar Component for 100% control over layout, overflowing FAB, and blur effects
+function CustomTabBar({ state, descriptors, navigation }: any) {
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
 
+  // Define our visible tabs in order. 'spacer' leaves room for the absolute FAB.
+  const tabs = [
+    { name: 'index', icon: Home, label: 'Home' },
+    { name: 'feed', icon: Rss, label: 'Feed' },
+    { name: 'spacer' },
+    { name: 'group', icon: Users, label: 'Group' },
+    { name: 'profile', icon: User, label: 'Profile' }
+  ];
+
+  return (
+    <View style={[styles.tabBarContainer, { bottom: Math.max(insets.bottom, 0) }]}>
+      {/* 
+        Background Layer: 
+        This is separated so we can apply overflow: 'hidden' for the blur/background 
+        borderRadius clipping, while keeping the parent overflow: 'visible' for the FAB.
+      */}
+      <View style={styles.backgroundLayer}>
+        {Platform.OS === 'ios' ? (
+          <BlurView tint="dark" intensity={80} style={StyleSheet.absoluteFillObject} />
+        ) : undefined}
+      </View>
+
+      {/* Navigation Items */}
+      <View style={styles.tabBarInner}>
+        {tabs.map((tab, index) => {
+          if (tab.name === 'spacer') {
+            return <View key="spacer" style={styles.spacer} />;
+          }
+
+          // Find the actual route index from React Navigation state
+          const routeIndex = state.routes.findIndex((r: any) => r.name === tab.name);
+          if (routeIndex === -1) return null; // Fallback if route is missing
+
+          const isFocused = state.index === routeIndex;
+          const route = state.routes[routeIndex];
+          const Icon = tab.icon;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name, route.params);
+            }
+          };
+
+          return (
+            <Pressable
+              key={tab.name}
+              onPress={onPress}
+              style={styles.tabButton}
+            >
+              <Icon
+                size={22}
+                color={isFocused ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary}
+                style={[styles.icon, isFocused && styles.activeIcon]}
+              />
+              <Text style={[styles.tabLabel, isFocused && styles.activeTabLabel]}>
+                {tab.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {/* Floating Action Button (FAB) */}
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => router.push('/(modals)/quick-drop')}
+        style={styles.fabContainer}
+      >
+        <View style={styles.fabInner}>
+          <Plus size={30} color="#FFFFFF" strokeWidth={3} style={{ marginTop: 2 }} />
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 export default function TabLayout() {
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
-  
   return (
     <Tabs
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          position: 'absolute',
-          bottom: insets.bottom > 0 ? insets.bottom : 12,
-          left: '2%',
-          right: '2%',
-          borderRadius: 40,
-          height: 72,
-          borderTopWidth: 0,
-          backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(45, 27, 21, 0.7)',
-          paddingBottom: 0,
-          paddingHorizontal: 16,
-          ...Platform.select({
-            ios: {
-              shadowColor: '#1A0E0B',
-              shadowOffset: { width: 0, height: 10 },
-              shadowOpacity: 0.15,
-              shadowRadius: 20,
-            },
-            android: { elevation: 12 },
-            web: {
-              boxShadow: '0 10px 20px rgba(26, 14, 11, 0.15)',
-              backdropFilter: 'blur(24px)',
-            },
-          }),
-        },
-        tabBarBackground: () => (
-          Platform.OS === 'ios' ? (
-            <BlurView tint="dark" intensity={70} style={{ flex: 1, borderRadius: 40, overflow: 'hidden' }} />
-          ) : undefined
-        ),
-        tabBarShowLabel: false,
-        tabBarItemStyle: { paddingVertical: 0, justifyContent: 'center' },
         sceneStyle: { backgroundColor: DESIGN_COLORS.background },
       }}
     >
-
-      {/* 1. HOME TAB */}
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ focused }) => (
-            <View style={styles.tabItem}>
-              <Home
-                size={22}
-                color={focused ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary}
-                style={[styles.tabIcon, focused && styles.activeTabIcon]}
-              />
-              <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>Home</Text>
-            </View>
-          ),
-        }}
-      />
-
-      {/* 2. REPORTS FEED TAB */}
-      <Tabs.Screen
-        name="feed"
-        options={{
-          title: 'Reports',
-          tabBarIcon: ({ focused }) => (
-            <View style={styles.tabItem}>
-              <Rss
-                size={22}
-                color={focused ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary}
-                style={[styles.tabIcon, focused && styles.activeTabIcon]}
-              />
-              <Text style={[styles.tabLabel, focused && styles.activeTabLabel]} numberOfLines={1}>Feed</Text>
-            </View>
-          ),
-        }}
-      />
-
-      {/* 3. CENTER (+) QUICK DROP REPORT CTA BUTTON */}
-      <Tabs.Screen
-        name="report"
-        options={{
-          title: 'Report',
-          tabBarButton: (props) => (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => router.push('/(modals)/quick-drop')}
-              style={[props.style, styles.centerBtnContainer]}
-            >
-              <View style={styles.centerBtnCircle}>
-                <Text style={styles.centerBtnPlus}>+</Text>
-              </View>
-            </TouchableOpacity>
-          ),
-        }}
-      />
-
-      {/* 4. SOCIAL TAB — Friends & Groups */}
-      <Tabs.Screen
-        name="social"
-        options={{
-          title: 'Social',
-          tabBarIcon: ({ focused }) => (
-            <View style={styles.tabItem}>
-              <Users
-                size={22}
-                color={focused ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary}
-                style={[styles.tabIcon, focused && styles.activeTabIcon]}
-              />
-              <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>Social</Text>
-            </View>
-          ),
-        }}
-      />
-
-      {/* 5. PROFILE TAB */}
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ focused }) => (
-            <View style={styles.tabItem}>
-              <User
-                size={22}
-                color={focused ? DESIGN_COLORS.primary : DESIGN_COLORS.textSecondary}
-                style={[styles.tabIcon, focused && styles.activeTabIcon]}
-              />
-              <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>Profile</Text>
-            </View>
-          ),
-        }}
-      />
-
-      {/* Hidden: Stats/Leaderboard (accessible via navigation but not in tab bar) */}
-      <Tabs.Screen
-        name="stats"
-        options={{
-          href: null,
-        }}
-      />
-
+      <Tabs.Screen name="index" />
+      <Tabs.Screen name="feed" />
+      <Tabs.Screen name="group" />
+      <Tabs.Screen name="profile" />
+      {/* Hidden Screens */}
+      <Tabs.Screen name="report" options={{ href: null }} />
+      <Tabs.Screen name="stats" options={{ href: null }} />
     </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
-  tabItem: {
+  tabBarContainer: {
+    position: 'absolute',
+    alignSelf: 'center',
+    width: '96%',
+    maxWidth: 420,
+    height: 60,
+    zIndex: 100,
+    // CRITICAL: Must be visible so the FAB can pop out of the top
+    overflow: 'visible',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.35,
+        shadowRadius: 20,
+      },
+      android: { elevation: 16 },
+      web: { boxShadow: '0 10px 30px rgba(0, 0, 0, 0)' },
+    }),
+  },
+  backgroundLayer: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 36,
+    overflow: 'hidden', // Clips the blur view perfectly
+    backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(45, 27, 21, 0.92)',
+  },
+  tabBarInner: {
     flex: 1,
-    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+  },
+  tabButton: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    height: '100%',
   },
-  tabIcon: {
-    opacity: 0.6,
+  spacer: {
+    width: 72, // Matches the width of the FAB + borders to create a nice gap
   },
-  activeTabIcon: {
-    opacity: 1,
+  icon: {
+    marginBottom: 4,
+  },
+  activeIcon: {
     transform: [{ scale: 1.15 }],
   },
   tabLabel: {
@@ -191,46 +184,41 @@ const styles = StyleSheet.create({
     color: DESIGN_COLORS.textSecondary,
   },
   activeTabLabel: {
-    color: DESIGN_COLORS.primary,
     fontFamily: 'Nunito-ExtraBold',
+    color: DESIGN_COLORS.primary,
   },
 
-  centerBtnContainer: {
-    flex: 1,
-    alignItems: 'center',
+  // FAB Styles
+  fabContainer: {
+    position: 'absolute',
+    top: -10, // Pops out exactly by this amount
+    alignSelf: 'center',
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    // The cut-out effect: Thick border matching the background behind the tab bar
+    borderWidth: 6,
+    borderColor: DESIGN_COLORS.background,
+    backgroundColor: DESIGN_COLORS.background,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  centerBtnCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+  fabInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 28,
     backgroundColor: DESIGN_COLORS.accent,
-    alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 4,
-    borderColor: '#2D1B15',
+    alignItems: 'center',
     ...Platform.select({
       ios: {
         shadowColor: DESIGN_COLORS.accent,
-        shadowOffset: { width: 0, height: 0 },
+        shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.6,
-        shadowRadius: 16,
+        shadowRadius: 12,
       },
-      android: { elevation: 12 },
-      web: { boxShadow: '0 0 16px rgba(169, 92, 51, 0.6)' },
+      android: { elevation: 8 },
+      web: { boxShadow: '0 6px 12px rgba(169,92,51,0.6)' },
     }),
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000'
-  },
-
-  centerBtnPlus: {
-    fontSize: 28,
-    fontFamily: 'Nunito-ExtraBold',
-    color: '#FFFFFF',
-    marginTop: -2,
   },
 });

@@ -8,7 +8,6 @@ import PageTransition from '@/components/PageTransition';
 import { useAuthStore } from '@/stores/authStore';
 import { useDropStore } from '@/stores/dropStore';
 import { useFeedStore } from '@/stores/feedStore';
-import { useLeaderboardStore } from '@/stores/leaderboardStore';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -62,7 +61,6 @@ import Animated, {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { topUsers, fetchLeaderboard } = useLeaderboardStore();
   const { feedItems, toggleUpvote, fetchFeed } = useFeedStore();
   const { todayCount, currentStreak, drops, loadLocalState } = useDropStore();
   const { profile } = useAuthStore();
@@ -77,7 +75,6 @@ export default function HomeScreen() {
 
   React.useEffect(() => {
     fetchFeed();
-    fetchLeaderboard();
     loadLocalState();
 
     // Start continuous floating animation
@@ -185,11 +182,11 @@ export default function HomeScreen() {
                 <Text style={[styles.widgetLabel, styles.whiteText]}>Drops Today</Text>
               </View>
 
-              {/* WIDGET 2: 1x1 Square Rank */}
+              {/* WIDGET 2: 1x1 Square Streak */}
               <View style={[styles.widget1x1, styles.widgetOlive, styles.shadowOlive, styles.whiteBorder]}>
-                <Emoji symbol="🏅" size={54} style={{ marginBottom: 8 }} />
-                <Text style={[styles.widgetNumber, styles.whiteText]}>{totalLoggedCount > 0 ? '#1' : '-'}</Text>
-                <Text style={[styles.widgetLabel, styles.whiteText]}>Local Rank</Text>
+                <Emoji symbol="🔥" size={54} style={{ marginBottom: 8 }} />
+                <Text style={[styles.widgetNumber, styles.whiteText]}>{currentStreak}</Text>
+                <Text style={[styles.widgetLabel, styles.whiteText]}>Current Streak</Text>
               </View>
 
               {/* WIDGET 3: 2x2 Large Pet Centerpiece */}

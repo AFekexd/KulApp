@@ -28,11 +28,6 @@ export const INTENSITY_LEVELS = {
   HEAVY_ARTILLERY: { label: 'Heavy Artillery', emoji: '💣', value: 'HEAVY_ARTILLERY' },
 };
 
-export const PRIVACY_LEVELS = {
-  PRIVATE: { label: 'Private', icon: 'lock-closed', value: 'PRIVATE' },
-  FRIENDS: { label: 'Friends', icon: 'people', value: 'FRIENDS' },
-  GROUP: { label: 'Group', icon: 'earth', value: 'GROUP' },
-};
 
 export const FUNNY_TITLES = [
   'The Morning Ritual',

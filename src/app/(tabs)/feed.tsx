@@ -1,13 +1,10 @@
-/**
- * Reports Feed Screen — KulAPP
- * Native iOS 18 style feed for community poop reports.
- */
 import PageTransition from '@/components/PageTransition';
 import { FeedItem, useFeedStore } from '@/stores/feedStore';
+import { useGroupStore } from '@/stores/groupStore';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Globe, Home, Lock, MapPin, Radio, Search, ThumbsUp, Users } from 'lucide-react-native';
-import { useState } from 'react';
+import { Globe, Home, MapPin, Radio, Search, ThumbsUp, Users } from 'lucide-react-native';
+import { useState, useEffect } from 'react';
 import {
   Platform,
   RefreshControl,
@@ -51,9 +48,14 @@ const getSizeBadgeStyle = (size: string) => {
 export default function FeedScreen() {
   const router = useRouter();
   const { feedItems, toggleUpvote, refreshFeed, isRefreshing } = useFeedStore();
+  const { groups, fetchUserGroups } = useGroupStore();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [activePrivacyFilter, setActivePrivacyFilter] = useState<'all' | 'friends' | 'group' | 'private'>('all');
+  const [activeGroupFilter, setActiveGroupFilter] = useState<string>('all');
+
+  useEffect(() => {
+    fetchUserGroups();
+  }, []);
 
   const filteredItems = feedItems.filter((item: FeedItem) => {
     const matchesSearch =
@@ -62,9 +64,11 @@ export default function FeedScreen() {
       item.profiles.username.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (!matchesSearch) return false;
-    if (activePrivacyFilter === 'friends') return item.privacy_level.toLowerCase() === 'friends';
-    if (activePrivacyFilter === 'group') return item.privacy_level.toLowerCase() === 'group';
-    if (activePrivacyFilter === 'private') return item.privacy_level.toLowerCase() === 'private';
+    
+    if (activeGroupFilter !== 'all') {
+      return item.target_group_id === activeGroupFilter;
+    }
+    
     return true;
   });
 
@@ -129,26 +133,35 @@ export default function FeedScreen() {
               )}
             </View>
 
-            {/* Filter Pills: Privacy & Scope */}
-            <View style={styles.filterPillRow}>
-              {(['all', 'friends', 'group', 'private'] as const).map((f) => (
+            {/* Filter Pills: Group Scope */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterPillRow}>
+              <TouchableOpacity
+                style={[styles.filterPill, activeGroupFilter === 'all' && styles.filterPillActive]}
+                onPress={() => setActiveGroupFilter('all')}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Globe size={14} color={activeGroupFilter === 'all' ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />
+                  <Text style={[styles.filterPillText, activeGroupFilter === 'all' && styles.filterPillTextActive]}>
+                    All My Groups
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              
+              {groups.map((g) => (
                 <TouchableOpacity
-                  key={f}
-                  style={[styles.filterPill, activePrivacyFilter === f && styles.filterPillActive]}
-                  onPress={() => setActivePrivacyFilter(f)}
+                  key={g.id}
+                  style={[styles.filterPill, activeGroupFilter === g.id && styles.filterPillActive]}
+                  onPress={() => setActiveGroupFilter(g.id)}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    {f === 'all' && <Globe size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
-                    {f === 'friends' && <Users size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
-                    {f === 'group' && <Home size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
-                    {f === 'private' && <Lock size={14} color={activePrivacyFilter === f ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />}
-                    <Text style={[styles.filterPillText, activePrivacyFilter === f && styles.filterPillTextActive]}>
-                      {f === 'all' ? 'All Drops' : f === 'friends' ? 'Friends' : f === 'group' ? 'Group' : 'Private'}
+                    <Home size={14} color={activeGroupFilter === g.id ? '#FFFFFF' : DESIGN_COLORS.textSecondary} />
+                    <Text style={[styles.filterPillText, activeGroupFilter === g.id && styles.filterPillTextActive]}>
+                      {g.name}
                     </Text>
                   </View>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
 
             {/* Feed List */}
             <View style={styles.feedStack}>
@@ -170,7 +183,15 @@ export default function FeedScreen() {
                           </View>
                           <View>
                             <Text style={styles.username}>{report.profiles.username}</Text>
-                            <Text style={styles.timeAgo}>{formatTimeAgo(report.created_at)}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                              <Text style={styles.timeAgo}>{formatTimeAgo(report.created_at)}</Text>
+                              {report.groups?.name && (
+                                <>
+                                  <Text style={styles.metaDot}>•</Text>
+                                  <Text style={styles.groupMetaText}>{report.groups.name}</Text>
+                                </>
+                              )}
+                            </View>
                           </View>
                         </View>
 
@@ -188,8 +209,6 @@ export default function FeedScreen() {
                         <View style={styles.locationMetaRow}>
                           <MapPin size={13} color={DESIGN_COLORS.textSecondary} />
                           <Text style={styles.locationText}>{report.location}</Text>
-                          <Text style={styles.metaDot}>•</Text>
-                          <Text style={styles.verificationBadge}>✓ Verified {report.verification_pct}%</Text>
                         </View>
                       </View>
 
@@ -293,6 +312,7 @@ const styles = StyleSheet.create({
   filterPillRow: {
     flexDirection: 'row',
     gap: 8,
+    paddingBottom: 4,
   },
   filterPill: {
     backgroundColor: DESIGN_COLORS.card,
@@ -301,6 +321,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: DESIGN_COLORS.border,
+    marginRight: 8,
   },
   filterPillActive: {
     backgroundColor: DESIGN_COLORS.primary,
@@ -374,6 +395,11 @@ const styles = StyleSheet.create({
   timeAgo: {
     fontSize: 11,
     color: DESIGN_COLORS.textSecondary,
+  },
+  groupMetaText: {
+    fontSize: 11,
+    color: DESIGN_COLORS.primary,
+    fontFamily: 'Inter-Bold',
   },
   sizeBadge: {
     paddingHorizontal: 10,

@@ -34,7 +34,6 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
         todayCount={todayCount}
         streak={streak}
         xp={1245 + todayCount * 50}
-        rank="#1"
       />
     );
   } else if (widgetInfo.widgetName === 'Streak') {

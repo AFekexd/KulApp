@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { supabase } from '@/lib/supabase';
 import { storage } from '@/lib/mmkv';
+import { supabase } from '@/lib/supabase';
+import { create } from 'zustand';
 
 export interface LeaderboardUser {
   id: string;
@@ -40,28 +40,40 @@ const saveLeaderboardCache = (users: LeaderboardUser[]) => {
 interface LeaderboardState {
   topUsers: LeaderboardUser[];
   isLoading: boolean;
-  fetchLeaderboard: () => Promise<void>;
+  fetchLeaderboard: (groupId: string) => Promise<void>;
 }
 
 export const useLeaderboardStore = create<LeaderboardState>((set) => ({
   topUsers: loadCachedLeaderboard(),
   isLoading: false,
 
-  fetchLeaderboard: async () => {
+  fetchLeaderboard: async (groupId: string) => {
+    if (!groupId) return;
+    
     set({ isLoading: true });
     try {
-      // Query profiles table in Supabase
-      const { data, error } = await (supabase as any)
-        .from('profiles')
-        .select(`
-          id,
-          username,
-          avatar_url,
-          created_at,
-          drops ( id )
-        `)
+      let data, error;
+
+      const res = await (supabase as any)
+        .from('group_members')
+        .select(
+          `profiles(
+            id,
+            username,
+            avatar_url,
+            created_at,
+            drops(id, target_group_id)
+          )`
+        )
+        .eq('group_id', groupId)
+        .eq('profiles.drops.target_group_id', groupId)
         .limit(20);
 
+      error = res.error;
+      if (res.data) {
+        data = res.data.map((r: any) => r.profiles).filter(Boolean);
+      }
+      
       if (!error && data && data.length > 0) {
         const usersWithPoints: LeaderboardUser[] = data.map((p: any) => {
           const dropCount = Array.isArray(p.drops) ? p.drops.length : 0;
@@ -90,6 +102,8 @@ export const useLeaderboardStore = create<LeaderboardState>((set) => ({
 
         set({ topUsers: formatted });
         saveLeaderboardCache(formatted);
+      } else {
+        set({ topUsers: [] });
       }
     } catch {
       // Keep cached

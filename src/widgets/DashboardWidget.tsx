@@ -5,14 +5,13 @@ export interface DashboardWidgetProps {
   todayCount: number;
   streak: number;
   xp: number;
-  rank: string;
 }
 
 /**
  * 2x2 "Stats & Rank" Widget (Section 6)
  * Native iOS 18 / Android Widget in flat light mode style.
  */
-export function DashboardWidget({ todayCount, streak, xp, rank }: DashboardWidgetProps) {
+export function DashboardWidget({ todayCount, streak, xp }: DashboardWidgetProps) {
   return (
     <FlexWidget
       style={{
@@ -50,23 +49,6 @@ export function DashboardWidget({ todayCount, streak, xp, rank }: DashboardWidge
           />
         </FlexWidget>
 
-        <FlexWidget
-          style={{
-            backgroundColor: '#333333',
-            paddingHorizontal: 8,
-            paddingVertical: 4,
-            borderRadius: 12,
-          }}
-        >
-          <TextWidget
-            text={rank || '#17'}
-            style={{
-              fontSize: 10,
-              fontWeight: 'bold',
-              color: '#F5A623',
-            }}
-          />
-        </FlexWidget>
       </FlexWidget>
 
       {/* Stats Row */}

@@ -64,7 +64,6 @@ export default function ProfileScreen() {
   }, [profile?.id]);
 
   // Preference switches
-  const [privacy, setPrivacy] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [haptics, setHaptics] = useState(true);
   const [stealthMode, setStealthMode] = useState(false);
@@ -221,18 +220,6 @@ export default function ProfileScreen() {
             <View style={styles.sectionCard}>
               <Text style={styles.sectionTitle}>Preferences</Text>
 
-              <View style={styles.settingRow}>
-                <View style={styles.settingInfo}>
-                  <Text style={styles.settingLabel}>Private by Default</Text>
-                  <Text style={styles.settingSub}>Keep new drops visible to friends only</Text>
-                </View>
-                <Switch
-                  value={privacy}
-                  onValueChange={setPrivacy}
-                  trackColor={{ false: C.warmSurface, true: C.primary }}
-                  thumbColor="#FFF"
-                />
-              </View>
 
               <View style={styles.settingRow}>
                 <View style={styles.settingInfo}>
